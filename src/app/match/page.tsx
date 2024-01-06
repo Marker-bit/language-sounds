@@ -70,7 +70,7 @@ export default function Page() {
     setSelected2(value);
   }
 
-  function updateWords1(value: string) {
+  async function updateWords1(value: string) {
     if (value === null) {
       setWords1([]);
       return;
@@ -90,6 +90,7 @@ export default function Page() {
             (w: any) => w.languageId === parseInt(value)
           )
         );
+        return;
       };
     });
   }
@@ -102,7 +103,7 @@ export default function Page() {
     setChangedWords2(words2);
   }
 
-  function updateWords2(value: string) {
+  async function updateWords2(value: string) {
     if (value === null) {
       setWords2([]);
       return;
@@ -122,6 +123,7 @@ export default function Page() {
             (w: any) => w.languageId === parseInt(value)
           )
         );
+        return;
       };
     });
   }
@@ -191,12 +193,19 @@ export default function Page() {
     getDb((db) => {
       let transaction = db.transaction("pairs", "readwrite");
       let store = transaction.objectStore("pairs");
-      store.get(id).onsuccess = (event: any) => {
+      store.get(id).onsuccess = async (event: any) => {
         reset();
         const pair = event.target.result;
         setPairs(pair.pairs);
-        updateWords1(pair.fromLanguageId.toString());
-        updateWords2(pair.toLanguageId.toString());
+        await updateWords1(pair.fromLanguageId.toString());
+        await updateWords2(pair.toLanguageId.toString());
+        setTimeout(() => {
+          for (const w of pair.pairs) {
+            const { selected1: word1, selected2: word2 } = w;
+            setChangedWords1((prev) => prev.filter((w) => w.id !== word1.id));
+            setChangedWords2((prev) => prev.filter((w) => w.id !== word2.id));
+          }
+        }, 100);
       };
     });
   }
