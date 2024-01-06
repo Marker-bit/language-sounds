@@ -172,7 +172,7 @@ export default function Page() {
             (l) => l.id === p.toLanguageId
           );
         }
-        setSavedPairs(event.target.result);
+        setSavedPairs(pa);
       };
     });
   }
