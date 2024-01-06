@@ -187,6 +187,20 @@ export default function Page() {
     });
   }
 
+  function importPair(id: number) {
+    getDb((db) => {
+      let transaction = db.transaction("pairs", "readwrite");
+      let store = transaction.objectStore("pairs");
+      store.get(id).onsuccess = (event: any) => {
+        reset();
+        const pair = event.target.result;
+        setPairs(pair.pairs);
+        updateWords1(pair.fromLanguageId.toString());
+        updateWords2(pair.toLanguageId.toString());
+      };
+    });
+  }
+
   React.useEffect(() => {
     listPairs();
     getDb((db) => {
@@ -263,44 +277,44 @@ export default function Page() {
         <div className="flex gap-1 flex-wrap justify-center">
           {savedPairs.length > 0 && (
             <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" onClick={listPairs}>
-                Импорт
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-96">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center flex-wrap">
-                    <h4 className="font-medium leading-none">Импорт пар</h4>
-                    <div className="text-sm text-zinc-400 flex gap-1 items-center">
-                      <Button
-                        variant="ghost"
-                        className="rounded-full p-1 h-auto"
-                        disabled={currentPairIndex === 0}
-                        onClick={() => setCurrentPairIndex(i => i - 1)}
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                      </Button>
-                      <span>{currentPairIndex + 1}</span>
-                      <span>/</span>
-                      <span>{savedPairs.length}</span>
-                      <Button
-                        variant="ghost"
-                        className="rounded-full p-1 h-auto"
-                        disabled={currentPairIndex === savedPairs.length - 1}
-                        onClick={() => setCurrentPairIndex(i => i + 1)}
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </Button>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" onClick={listPairs}>
+                  Импорт
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96">
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center flex-wrap">
+                      <h4 className="font-medium leading-none">Импорт пар</h4>
+                      <div className="text-sm text-zinc-400 flex gap-1 items-center">
+                        <Button
+                          variant="ghost"
+                          className="rounded-full p-1 h-auto"
+                          disabled={currentPairIndex === 0}
+                          onClick={() => setCurrentPairIndex((i) => i - 1)}
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                        </Button>
+                        <span>{currentPairIndex + 1}</span>
+                        <span>/</span>
+                        <span>{savedPairs.length}</span>
+                        <Button
+                          variant="ghost"
+                          className="rounded-full p-1 h-auto"
+                          disabled={currentPairIndex === savedPairs.length - 1}
+                          onClick={() => setCurrentPairIndex((i) => i + 1)}
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
+                    <p className="text-sm text-muted-foreground">
+                      Выберите колоду.
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Выберите колоду.
-                  </p>
-                </div>
-                <div className="flex">
-                  {/* {savedPairs.map((pair) => (
+                  <div className="flex">
+                    {/* {savedPairs.map((pair) => (
                       <div
                         key={pair.id}
                         className="border border-zinc-200 rounded-md p-2 cursor-pointer transition"
@@ -308,29 +322,30 @@ export default function Page() {
                         {pair.pairs[0].selected1.word}
                       </div>
                     ))} */}
-                  {savedPairs[currentPairIndex].pairs.map(
-                    ({
-                      selected1,
-                      selected2,
-                    }: {
-                      selected1: Word;
-                      selected2: Word;
-                    }) => (
-                      <div
-                        key={selected1.id}
-                        className="flex gap-1 items-center max-md:flex-wrap"
-                      >
-                        <AudioPlayback audio={selected1.audio!} />
-                        <span>{selected1.word}</span> —
-                        <AudioPlayback audio={selected2.audio!} />
-                        <span>{selected2.word}</span>
-                      </div>
-                    )
-                  )}
+                    {savedPairs[currentPairIndex].pairs.map(
+                      ({
+                        selected1,
+                        selected2,
+                      }: {
+                        selected1: Word;
+                        selected2: Word;
+                      }) => (
+                        <div
+                          key={selected1.id}
+                          className="flex gap-1 items-center max-md:flex-wrap"
+                        >
+                          <AudioPlayback audio={selected1.audio!} />
+                          <span>{selected1.word}</span> —
+                          <AudioPlayback audio={selected2.audio!} />
+                          <span>{selected2.word}</span>
+                        </div>
+                      )
+                    )}
+                  </div>
+                  <Button onClick={() => importPair(savedPairs[currentPairIndex].id)}>Импорт</Button>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
           )}
           {pairs.length !== 0 && (
             <>
