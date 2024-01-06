@@ -546,6 +546,7 @@ export default function Page() {
             {resultAudioUrl && (
               <>
                 <AudioPlayback audio={resultAudioUrl} />
+                <audio src={resultAudioUrl} controls />
                 {/* <Link href={resultAudioUrl} download={true}>
             <Button variant="ghost" className="rounded-full p-2">
               <Download className="w-5 h-5" />
