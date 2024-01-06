@@ -74,11 +74,11 @@ export default function Page() {
               </Link>
             </ContextMenuTrigger>
             <ContextMenuContent>
-              <ContextMenuItem onClick={() => onOpen("editLanguage", language)}>
+              <ContextMenuItem onClick={() => onOpen("editLanguage", language, null)}>
                 <Pencil className="w-4 h-4 mr-1" />
                 <span>Редактировать</span>
               </ContextMenuItem>
-              <ContextMenuItem onClick={() => onOpen("deleteLanguage", language)}>
+              <ContextMenuItem onClick={() => onOpen("deleteLanguage", language, null)}>
                 <Trash2 className="w-4 h-4 mr-1" />
                 <span>Удалить</span>
               </ContextMenuItem>

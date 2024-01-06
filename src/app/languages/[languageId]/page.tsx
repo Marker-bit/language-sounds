@@ -4,7 +4,14 @@ import AudioPlayback from "@/components/audio-playback";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
 import { getDb } from "@/lib/utils";
-import { CopyPlus, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  CopyPlus,
+  Edit,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -23,24 +30,27 @@ export default function Page() {
   const { onOpen } = useModal();
 
   useEffect(() => {
+    function update() {
+      getDb((db) => {
+        let transaction = db.transaction("languages", "readwrite");
+        let store = transaction.objectStore("languages");
+        store.get(parseInt(languageId as string)).onsuccess = (event: any) => {
+          setLanguage(event.target.result);
+          const tx = db.transaction("words", "readwrite");
+          const store = tx.objectStore("words");
+          store.getAll().onsuccess = (event: any) => {
+            setWords(
+              event.target.result.filter(
+                (w: any) => w.languageId === parseInt(languageId as string)
+              )
+            );
+          };
+        };
+      });
+    }
     update();
     setInterval(update, 1000);
-  }, []);
-
-  function update() {
-    getDb((db) => {
-      let transaction = db.transaction("languages", "readwrite");
-      let store = transaction.objectStore("languages");
-      store.get(parseInt(languageId as string)).onsuccess = (event: any) => {
-        setLanguage(event.target.result);
-        const tx = db.transaction("words", "readwrite");
-        const store = tx.objectStore("words");
-        store.getAll().onsuccess = (event: any) => {
-          setWords(event.target.result.filter((w: any) => w.languageId === parseInt(languageId as string)));
-        };
-      };
-    });
-  }
+  }, [languageId]);
 
   return (
     <div>
@@ -49,7 +59,10 @@ export default function Page() {
       ) : (
         <>
           <h1 className="text-3xl font-bold">{language?.title}</h1>
-          <Button variant="outline" onClick={() => onOpen("addWord", language)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpen("addWord", language, null)}
+          >
             <CopyPlus className="w-4 h-4 mr-2" /> Добавить слово
           </Button>
           {words.map((word) => (
@@ -66,7 +79,15 @@ export default function Page() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onOpen("editWord", language, word)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    <span>Редактировать</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onOpen("deleteWord", language, word)}
+                  >
                     <Trash2 className="w-4 h-4 mr-2" />
                     <span>Удалить</span>
                   </DropdownMenuItem>

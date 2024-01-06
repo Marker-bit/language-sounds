@@ -4,6 +4,8 @@ import { EditLanguageModal } from "@/components/dialogs/edit-language";
 import { useEffect, useState } from "react";
 import { DeleteLanguageModal } from "../dialogs/delete-language";
 import { AddWordModal } from "../dialogs/add-word";
+import { EditWordModal } from "../dialogs/edit-word";
+import { DeleteWordModal } from "../dialogs/delete-word";
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -21,6 +23,8 @@ export const ModalProvider = () => {
       <EditLanguageModal />
       <DeleteLanguageModal />
       <AddWordModal />
+      <EditWordModal />
+      <DeleteWordModal />
     </>
   );
 };

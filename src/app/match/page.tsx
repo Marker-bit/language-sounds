@@ -418,7 +418,7 @@ export default function Page() {
           </div>
         ))}
         {pairs.length !== 0 && (
-          <div className="flex gap-1">
+          <div className="flex gap-1 flex-wrap justify-center">
             {/* <Input
               type="number"
               value={delay}
