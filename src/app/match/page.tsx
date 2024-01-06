@@ -173,7 +173,7 @@ export default function Page() {
   }
 
   React.useEffect(() => {
-    audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.current = new window.AudioContext();
   }, []);
 
   // Function to fetch and decode the original audio blob
@@ -305,18 +305,6 @@ export default function Page() {
     // Here you would use the code provided by Russell Good to convert the buffer to WAV
     // You can find the `bufferToWave` function from the instructions above
     return bufferToWave(audioBuffer, audioBuffer.length);
-  };
-
-  // Step 4: Use the AudioBuffer to create a WAV file
-  const convertToWav = async (webmBlob: Blob) => {
-    try {
-      const arrayBuffer: ArrayBuffer = await blobToArrayBuffer(webmBlob);
-      const audioBuffer = await decodeAudioData(webmBlob);
-      const wavBlob = audioBufferToWavBlob(audioBuffer);
-      return wavBlob;
-    } catch (error) {
-      console.error("Conversion error:", error);
-    }
   };
 
   function appendBuffer(buffer1: AudioBuffer, buffer2: AudioBuffer) {
