@@ -163,13 +163,14 @@ export default function Page() {
       let transaction = db.transaction("pairs", "readwrite");
       let store = transaction.objectStore("pairs");
       store.getAll().onsuccess = (event: any) => {
-        for (const p of event.target.result) {
+        const pa = event.target.result;
+        for (const p of pa) {
           p.fromLanguage = languages.find(
             (l) => l.id === p.fromLanguageId
-          ) as any;
+          );
           p.toLanguage = languages.find(
             (l) => l.id === p.toLanguageId
-          ) as any;
+          );
         }
         setSavedPairs(event.target.result);
       };
