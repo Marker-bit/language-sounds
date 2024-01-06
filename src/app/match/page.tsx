@@ -19,14 +19,24 @@ import {
   Download,
   RotateCw,
   Save,
+  Trash,
 } from "lucide-react";
 import * as React from "react";
 import { addSilenceToAudioBlob, dataURItoBlob } from "@/lib/audio-silencer";
 
 import type { Word } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+  SelectTrigger,
+} from "@/components/ui/select";
 
 export default function Page() {
   const [languages, setLanguages] = React.useState<any[]>([]);
+  const [language1, setLanguage1] = React.useState<any | null>(null);
+  const [language2, setLanguage2] = React.useState<any | null>(null);
   const [words1, setWords1] = React.useState<any[]>([]);
   const [words2, setWords2] = React.useState<any[]>([]);
   const [changedWords1, setChangedWords1] = React.useState<any[]>([]);
@@ -75,6 +85,7 @@ export default function Page() {
       setWords1([]);
       return;
     }
+    setLanguage1(value);
     getDb((db) => {
       let transaction = db.transaction("words", "readwrite");
       let store = transaction.objectStore("words");
@@ -108,6 +119,7 @@ export default function Page() {
       setWords2([]);
       return;
     }
+    setLanguage2(value);
     getDb((db) => {
       let transaction = db.transaction("words", "readwrite");
       let store = transaction.objectStore("words");
@@ -132,9 +144,13 @@ export default function Page() {
     getDb((db) => {
       let transaction = db.transaction("pairs", "readwrite");
       let store = transaction.objectStore("pairs");
+      const fromLanguageId = parseInt(words1[0].languageId);
+      const toLanguageId = parseInt(words2[0].languageId);
       store.put({
-        fromLanguageId: parseInt(words1[0].languageId),
-        toLanguageId: parseInt(words2[0].languageId),
+        fromLanguageId,
+        toLanguageId,
+        fromLanguage: languages.find((l) => l.id === fromLanguageId),
+        toLanguage: languages.find((l) => l.id === toLanguageId),
         pairs: pairs,
       }).onsuccess = () => {
         listPairs();
@@ -210,6 +226,36 @@ export default function Page() {
     });
   }
 
+  function updatePair(id: number) {
+    getDb((db) => {
+      let transaction = db.transaction("pairs", "readwrite");
+      let store = transaction.objectStore("pairs");
+      const fromLanguageId = parseInt(words1[0].languageId);
+      const toLanguageId = parseInt(words2[0].languageId);
+      store.put({
+        fromLanguageId,
+        toLanguageId,
+        fromLanguage: languages.find((l) => l.id === fromLanguageId),
+        toLanguage: languages.find((l) => l.id === toLanguageId),
+        pairs: pairs,
+        id
+      }).onsuccess = () => {
+        listPairs();
+      };
+    });
+  }
+
+  function deletePair(id: number) {
+    getDb((db) => {
+      let transaction = db.transaction("pairs", "readwrite");
+      let store = transaction.objectStore("pairs");
+
+      store.delete(id).onsuccess = () => {
+        listPairs();
+      }
+    });
+  }
+
   React.useEffect(() => {
     listPairs();
     getDb((db) => {
@@ -225,7 +271,7 @@ export default function Page() {
     <>
       <div className="grid grid-cols-2 min-h-full">
         <div className="flex flex-col gap-1 items-center">
-          <Combobox
+          {/* <Combobox
             variants={languages.map((language) => ({
               value: language.id.toString(),
               label: language.title,
@@ -233,7 +279,19 @@ export default function Page() {
             placeholder="Выберите язык"
             notFoundMessage="Ничего не нашлось"
             onUpdate={updateWords1}
-          />
+          /> */}
+          <Select onValueChange={updateWords1} value={language1}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Выберите язык" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language.id} value={language.id.toString()}>
+                  {language.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {changedWords1.map((word) => (
             <div
               key={word.id}
@@ -248,15 +306,18 @@ export default function Page() {
           ))}
         </div>
         <div className="flex flex-col gap-1 items-center">
-          <Combobox
-            variants={languages.map((language) => ({
-              value: language.id.toString(),
-              label: language.title,
-            }))}
-            placeholder="Выберите язык"
-            notFoundMessage="Ничего не нашлось"
-            onUpdate={updateWords2}
-          />
+          <Select onValueChange={updateWords2} value={language2}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Выберите язык" />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((language) => (
+                <SelectItem key={language.id} value={language.id.toString()}>
+                  {language.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {changedWords2.map((word) => (
             <div
               key={word.id}
@@ -291,7 +352,7 @@ export default function Page() {
                   Импорт
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-96">
+              <PopoverContent className="w-96 max-sm:w-lvw">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center flex-wrap">
@@ -316,13 +377,31 @@ export default function Page() {
                         >
                           <ArrowRight className="w-4 h-4" />
                         </Button>
+                        <Button
+                          variant="ghost"
+                          className="rounded-full p-1 h-auto"
+                          onClick={() => updatePair(savedPairs[currentPairIndex].id)}
+                        >
+                          <Save className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="rounded-full p-1 h-auto"
+                          onClick={() => deletePair(savedPairs[currentPairIndex].id)}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Выберите колоду.
                     </p>
                   </div>
-                  <div className="flex">
+                  <div>
+                    {savedPairs[currentPairIndex].fromLanguage.title} —{" "}
+                    {savedPairs[currentPairIndex].toLanguage.title}
+                  </div>
+                  <div className="flex flex-col gap-1">
                     {/* {savedPairs.map((pair) => (
                       <div
                         key={pair.id}
@@ -351,7 +430,11 @@ export default function Page() {
                       )
                     )}
                   </div>
-                  <Button onClick={() => importPair(savedPairs[currentPairIndex].id)}>Импорт</Button>
+                  <Button
+                    onClick={() => importPair(savedPairs[currentPairIndex].id)}
+                  >
+                    Импорт
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -362,7 +445,7 @@ export default function Page() {
                 <PopoverTrigger asChild>
                   <Button variant="outline">Настройки</Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-96">
+                <PopoverContent className="w-96 max-sm:w-lvw">
                   <div className="grid gap-4">
                     <div className="space-y-2">
                       <h4 className="font-medium leading-none">
