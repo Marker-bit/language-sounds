@@ -23,6 +23,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import type { Language } from "@/types";
+
 export default function Page() {
   const { languageId } = useParams();
   const [language, setLanguage] = useState<Language | null>(null);

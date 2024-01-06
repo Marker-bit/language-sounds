@@ -1,8 +1,8 @@
-type Language = {
+export type Language = {
   id: number
   title: string
 }
-type Word = {
+export type Word = {
   id: number
   word: string
   languageId: number

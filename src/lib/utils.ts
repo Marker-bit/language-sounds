@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getDb(f: (db: IDBDatabase) => void) {
-  let openRequest = indexedDB.open("words", 1);
+  let openRequest = indexedDB.open("words", 2);
 
   openRequest.onupgradeneeded = function () {
     let db = openRequest.result;
@@ -15,6 +15,9 @@ export function getDb(f: (db: IDBDatabase) => void) {
     }
     if (!db.objectStoreNames.contains("languages")) {
       db.createObjectStore("languages", { keyPath: "id", autoIncrement: true });
+    }
+    if (!db.objectStoreNames.contains("pairs")) {
+      db.createObjectStore("pairs", { keyPath: "id", autoIncrement: true });
     }
   };
 
