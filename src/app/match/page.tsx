@@ -174,7 +174,7 @@ export default function Page() {
 
   React.useEffect(() => {
     audioCtx.current = new (window.AudioContext || window.webkitAudioContext)();
-  });
+  }, []);
 
   // Function to fetch and decode the original audio blob
   async function decodeAudioData(blob: Blob) {
