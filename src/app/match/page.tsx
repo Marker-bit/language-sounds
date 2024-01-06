@@ -158,20 +158,21 @@ export default function Page() {
     });
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function listPairs() {
+    if (!languages) {
+      return;
+    }
     getDb((db) => {
       let transaction = db.transaction("pairs", "readwrite");
       let store = transaction.objectStore("pairs");
       store.getAll().onsuccess = (event: any) => {
         const pa = event.target.result;
         for (const p of pa) {
-          p.fromLanguage = languages.find(
-            (l) => l.id === p.fromLanguageId
-          );
-          p.toLanguage = languages.find(
-            (l) => l.id === p.toLanguageId
-          );
+          p.fromLanguage = languages.find((l) => l.id === p.fromLanguageId);
+          p.toLanguage = languages.find((l) => l.id === p.toLanguageId);
         }
+        console.log(pa, languages);
         setSavedPairs(pa);
       };
     });
@@ -247,7 +248,7 @@ export default function Page() {
         fromLanguage: languages.find((l) => l.id === fromLanguageId),
         toLanguage: languages.find((l) => l.id === toLanguageId),
         pairs: pairs,
-        id
+        id,
       }).onsuccess = () => {
         listPairs();
       };
@@ -261,18 +262,18 @@ export default function Page() {
 
       store.delete(id).onsuccess = () => {
         listPairs();
-      }
+      };
     });
   }
 
   React.useEffect(() => {
-    listPairs();
     getDb((db) => {
       let transaction = db.transaction("languages", "readwrite");
       let store = transaction.objectStore("languages");
 
       store.getAll().onsuccess = (event: any) => {
         setLanguages(event.target.result);
+        listPairs();
       };
     });
   }, []);
@@ -358,14 +359,16 @@ export default function Page() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" onClick={listPairs}>
-                  Импорт
+                  Колоды
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-96 max-sm:w-lvw">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <div className="flex justify-between items-center flex-wrap">
-                      <h4 className="font-medium leading-none">Импорт пар</h4>
+                      <h4 className="font-medium leading-none">
+                        Открыть колоду
+                      </h4>
                       <div className="text-sm text-zinc-400 flex gap-1 items-center">
                         <Button
                           variant="ghost"
@@ -389,14 +392,18 @@ export default function Page() {
                         <Button
                           variant="ghost"
                           className="rounded-full p-1 h-auto"
-                          onClick={() => updatePair(savedPairs[currentPairIndex].id)}
+                          onClick={() =>
+                            updatePair(savedPairs[currentPairIndex].id)
+                          }
                         >
                           <Save className="w-4 h-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           className="rounded-full p-1 h-auto"
-                          onClick={() => deletePair(savedPairs[currentPairIndex].id)}
+                          onClick={() =>
+                            deletePair(savedPairs[currentPairIndex].id)
+                          }
                         >
                           <Trash className="w-4 h-4" />
                         </Button>
@@ -407,18 +414,10 @@ export default function Page() {
                     </p>
                   </div>
                   <div>
-                    {savedPairs[currentPairIndex].fromLanguage.title} —{" "}
-                    {savedPairs[currentPairIndex].toLanguage.title}
+                    {savedPairs[currentPairIndex].fromLanguage?.title} —{" "}
+                    {savedPairs[currentPairIndex].toLanguage?.title}
                   </div>
                   <div className="flex flex-col gap-1">
-                    {/* {savedPairs.map((pair) => (
-                      <div
-                        key={pair.id}
-                        className="border border-zinc-200 rounded-md p-2 cursor-pointer transition"
-                      >
-                        {pair.pairs[0].selected1.word}
-                      </div>
-                    ))} */}
                     {savedPairs[currentPairIndex].pairs.map(
                       ({
                         selected1,
@@ -439,11 +438,32 @@ export default function Page() {
                       )
                     )}
                   </div>
-                  <Button
-                    onClick={() => importPair(savedPairs[currentPairIndex].id)}
-                  >
-                    Импорт
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      onClick={() =>
+                        deletePair(savedPairs[currentPairIndex].id)
+                      }
+                      variant="outline"
+                    >
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        updatePair(savedPairs[currentPairIndex].id)
+                      }
+                      variant="outline"
+                    >
+                      <Save className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        importPair(savedPairs[currentPairIndex].id)
+                      }
+                    >
+                      Импорт
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
