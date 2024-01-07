@@ -26,7 +26,7 @@ import {
   Trash,
 } from "lucide-react";
 import * as React from "react";
-import { addSilenceToAudioBlob, dataURItoBlob } from "@/lib/audio-silencer";
+import { addSilenceToAudioBlob, dataURItoBlob, addSilenceToAudioDataUri, concatenateAudioDataUris } from "@/lib/audio-silencer";
 
 import type { Deck, Word } from "@/types";
 import {
@@ -206,6 +206,38 @@ export default function Page() {
     refreshDeck();
   }, []);
 
+  // async function makeRecording() {
+  //   let fullyMerged = [];
+  //   for (const w of pairs) {
+  //     const { selected1: word1, selected2: word2 } = w;
+  //     let blob1 = dataURItoBlob(word1.audio);
+  //     let blob2 = dataURItoBlob(word2.audio);
+
+  //     const newAudioBlob = await addSilenceToAudioBlob(
+  //       audioCtx.current,
+  //       blob1,
+  //       wordTranslationDelay
+  //     );
+  //     const newAudioBlob2 = await addSilenceToAudioBlob(
+  //       audioCtx.current,
+  //       blob2,
+  //       pairsDelay
+  //     );
+  //     fullyMerged.push(newAudioBlob, newAudioBlob2);
+  //   }
+  //   ConcatenateBlobs(fullyMerged, "audio/wav", (res: Blob) => {
+  //     // const audioElement = new Audio(URL.createObjectURL(res));
+  //     // audioElement.controls = true;
+  //     // document.body.appendChild(audioElement);
+  //     // let reader = new FileReader();
+  //     // reader.readAsDataURL(res);
+  //     // //creates a playable URL from the blob file.
+  //     // reader.onload = function () {
+  //     //   setResultAudioUrl(reader.result as string);
+  //     // };
+  //     setResultAudioUrl(URL.createObjectURL(res));
+  //   });
+  // }
   async function makeRecording() {
     let fullyMerged = [];
     for (const w of pairs) {
@@ -213,30 +245,25 @@ export default function Page() {
       let blob1 = dataURItoBlob(word1.audio);
       let blob2 = dataURItoBlob(word2.audio);
 
-      const newAudioBlob = await addSilenceToAudioBlob(
-        audioCtx.current,
-        blob1,
+      const newDataUri = await addSilenceToAudioDataUri(
+        word1.audio,
         wordTranslationDelay
       );
-      const newAudioBlob2 = await addSilenceToAudioBlob(
-        audioCtx.current,
-        blob2,
+      const newDataUri2 = await addSilenceToAudioDataUri(
+        word2.audio,
         pairsDelay
       );
-      fullyMerged.push(newAudioBlob, newAudioBlob2);
+      fullyMerged.push(newDataUri, newDataUri2);
     }
-    ConcatenateBlobs(fullyMerged, "audio/wav", (res: Blob) => {
-      // const audioElement = new Audio(URL.createObjectURL(res));
-      // audioElement.controls = true;
-      // document.body.appendChild(audioElement);
-      // let reader = new FileReader();
-      // reader.readAsDataURL(res);
-      // //creates a playable URL from the blob file.
-      // reader.onload = function () {
-      //   setResultAudioUrl(reader.result as string);
-      // };
-      setResultAudioUrl(URL.createObjectURL(res));
-    });
+    let resultUri = "";
+    for (const uri of fullyMerged) {
+      if (!resultUri) {
+        resultUri = uri;
+      } else {
+        resultUri = await concatenateAudioDataUris(resultUri, uri);
+      }
+    }
+    setResultAudioUrl(resultUri);
   }
 
   React.useEffect(() => {

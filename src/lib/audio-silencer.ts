@@ -185,6 +185,122 @@ export async function addSilenceToAudioBlob(
   return newBlob;
 }
 
+import * as toWav from "audiobuffer-to-wav";
+
+// Function to convert base64 string to Buffer
+function base64ToBuffer(base64: string): Buffer {
+  return Buffer.from(base64, "base64");
+}
+
+// Function to convert base64 string to ArrayBuffer
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  const binaryString = Buffer.from(base64, 'base64');
+  const buffer = binaryString.buffer.slice(
+    binaryString.byteOffset,
+    binaryString.byteOffset + binaryString.byteLength
+  );
+  return buffer;
+}
+
+
+// Function to add silence to an AudioBuffer
+export async function addSilenceToAudioDataUri(
+  dataUri: string,
+  silenceDuration: number
+): Promise<string> {
+  // Extract the base64 part of the data URI
+  const base64String = dataUri.split(",")[1];
+  const audioBuffer = base64ToArrayBuffer(base64String);
+
+  const context = new AudioContext();
+
+  // Decode the audio data to an AudioBuffer
+  const originalBuffer = await new Promise<AudioBuffer>((resolve, reject) => {
+    context.decodeAudioData(audioBuffer, resolve, reject);
+  });
+
+  // Create a silent buffer
+  const sampleRate = originalBuffer.sampleRate;
+  const silenceBuffer = context.createBuffer(
+    originalBuffer.numberOfChannels,
+    sampleRate * silenceDuration,
+    sampleRate
+  );
+
+  // Combine the original audio with the silent buffer
+  const combinedLength = originalBuffer.length + silenceBuffer.length;
+  const combinedBuffer = context.createBuffer(
+    originalBuffer.numberOfChannels,
+    combinedLength,
+    sampleRate
+  );
+
+  // Copy the original audio data
+  for (let channel = 0; channel < originalBuffer.numberOfChannels; channel++) {
+    combinedBuffer
+      .getChannelData(channel)
+      .set(originalBuffer.getChannelData(channel));
+  }
+
+  // Add the silence to the end of the buffer by doing nothing, as the buffer is already silent
+
+  // Encode the combined buffer to WAV
+  const wav = toWav(combinedBuffer);
+
+  // Convert the WAV buffer to a data URI
+  const wavDataUri = `data:audio/wav;base64,${Buffer.from(wav).toString(
+    "base64"
+  )}`;
+
+  return wavDataUri;
+}
+
+export async function concatenateAudioDataUris(dataUri1: string, dataUri2: string): Promise<string> {
+  const context = new AudioContext();
+
+  // Extract the base64 parts of the data URIs
+  const base64String1 = dataUri1.split(',')[1];
+  const base64String2 = dataUri2.split(',')[1];
+
+  // Convert base64 strings to Buffers
+  const audioBuffer1 = base64ToArrayBuffer(base64String1);
+  const audioBuffer2 = base64ToArrayBuffer(base64String2);
+
+  // Decode the audio data to AudioBuffers
+  const originalBuffer1 = await new Promise<AudioBuffer>((resolve, reject) => {
+    context.decodeAudioData(audioBuffer1, resolve, reject);
+  });
+  const originalBuffer2 = await new Promise<AudioBuffer>((resolve, reject) => {
+    context.decodeAudioData(audioBuffer2, resolve, reject);
+  });
+
+  // Create a new buffer to hold the concatenated audio
+  const combinedLength = originalBuffer1.length + originalBuffer2.length;
+  const combinedBuffer = context.createBuffer(
+    originalBuffer1.numberOfChannels,
+    combinedLength,
+    originalBuffer1.sampleRate
+  );
+
+  // Copy the first audio data
+  for (let channel = 0; channel < originalBuffer1.numberOfChannels; channel++) {
+    combinedBuffer.getChannelData(channel).set(originalBuffer1.getChannelData(channel));
+  }
+
+  // Copy the second audio data, starting at the end of the first
+  for (let channel = 0; channel < originalBuffer2.numberOfChannels; channel++) {
+    combinedBuffer.getChannelData(channel).set(originalBuffer2.getChannelData(channel), originalBuffer1.length);
+  }
+
+  // Encode the combined buffer to WAV
+  const wav = toWav(combinedBuffer);
+
+  // Convert the WAV buffer to a data URI
+  const wavDataUri = `data:audio/wav;base64,${Buffer.from(wav).toString('base64')}`;
+
+  return wavDataUri;
+}
+
 export function dataURItoBlob(dataURI: string): Blob {
   var byteString = atob(dataURI.split(",")[1]);
   var mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
