@@ -21,8 +21,10 @@ export default function RootLayout({
       <body className={inter.className}>
         {/* <div className="flex flex-col min-h-screen justify-center items-center"> */}
         <ModalProvider />
-        <Nav />
-        {children}
+        <div className="flex flex-col min-h-screen">
+          <Nav />
+          <div className="h-full">{children}</div>
+        </div>
       </body>
     </html>
   );

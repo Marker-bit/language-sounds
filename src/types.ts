@@ -8,3 +8,12 @@ export type Word = {
   languageId: number
   audio: string | null
 }
+export type Deck = {
+  id: number
+  fromLanguageId: number
+  toLanguageId: number
+  fromLanguage: Language
+  toLanguage: Language
+  pairs: any
+  title: string
+}

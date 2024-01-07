@@ -8,7 +8,7 @@ export default function Nav() {
   const pathname = usePathname();
   return (
     <>
-      <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-900 p-2">
+      <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-900 p-2 h-min">
         <Link
           className={cn(
             "text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-200 hover:dark:bg-zinc-800 px-2 rounded-md",
@@ -21,11 +21,11 @@ export default function Nav() {
         <Link
           className={cn(
             "text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-200 hover:dark:bg-zinc-800 px-2 rounded-md",
-            pathname === "/match" && "font-bold text-black dark:text-white"
+            pathname === "/decks" && "font-bold text-black dark:text-white"
           )}
-          href="/match"
+          href="/decks"
         >
-          Перевод
+          Колоды
         </Link>
       </div>
     </>

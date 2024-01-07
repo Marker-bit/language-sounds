@@ -276,20 +276,12 @@ export default function Page() {
         listPairs();
       };
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
     <>
       <div className="grid grid-cols-2 min-h-full">
         <div className="flex flex-col gap-1 items-center">
-          {/* <Combobox
-            variants={languages.map((language) => ({
-              value: language.id.toString(),
-              label: language.title,
-            }))}
-            placeholder="Выберите язык"
-            notFoundMessage="Ничего не нашлось"
-            onUpdate={updateWords1}
-          /> */}
           <Select onValueChange={updateWords1} value={language1}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Выберите язык" />
