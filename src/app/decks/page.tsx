@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/hooks/use-modal-store";
 import { getDb } from "@/lib/utils";
-import { MoreHorizontal, Pencil, Plus } from "lucide-react";
+import { MoreHorizontal, Pencil, Plus, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -53,6 +53,12 @@ export default function Decks() {
             >
               <Pencil className="w-4 h-4 mr-2" />
               Редактировать
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onOpen("deleteDeck", null, null, deck)}
+            >
+              <Trash className="w-4 h-4 mr-2" />
+              Удалить
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
