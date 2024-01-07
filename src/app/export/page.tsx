@@ -7,6 +7,7 @@ import { useState } from "react";
 export default function Page() {
   const [done, setDone] = useState(false);
   const [exportUrl, setExportUrl] = useState<string | null>(null);
+  const [exportBlobUrl, setExportBlobUrl] = useState<string | null>(null);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -33,7 +34,12 @@ export default function Page() {
             const text = JSON.stringify(jsonData);
             const url =
               "data:text/plain;charset=utf-8," + encodeURIComponent(text);
+            const blob = new Blob([text], {
+              type: "text/plain",
+            });
+            const url2 = URL.createObjectURL(blob);
             setExportUrl(url);
+            setExportBlobUrl(url2);
             link.href = url;
             link.download = "export.json";
             document.body.appendChild(link).click();
@@ -84,6 +90,9 @@ export default function Page() {
       <Button onClick={importFunc}>Импорт</Button>
       {exportUrl && (
         <a href={exportUrl} download="export.json">Скачать</a>
+      )}
+      {exportBlobUrl && (
+        <a href={exportBlobUrl} download="export.json">Скачать (v2)</a>
       )}
       {done && <div className="text-green-500">Импорт завершен</div>}
     </div>
