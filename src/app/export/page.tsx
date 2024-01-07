@@ -2,12 +2,23 @@
 
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { getDb } from "@/lib/utils";
+import { randomUUID } from "crypto";
 import {
+  ArrowDownUp,
   Clipboard,
   ClipboardCheck,
   ClipboardPaste,
@@ -27,6 +38,8 @@ export default function Page() {
     "idle" | "success" | "error"
   >("idle");
   const [clipboardDone, setClipboardDone] = useState(false);
+  const [fileName, setFileName] = useState<string>("");
+  const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -166,6 +179,42 @@ export default function Page() {
         console.error("Failed to read clipboard contents: ", err);
       });
   }
+
+  function saveToFileIo() {
+    let randomUUID = Math.random().toString(36).slice(10);
+    const form = new FormData();
+    form.append("file", new File([JSON.stringify(exportData!)], "export.json"));
+
+    // fetch("https://0x0.st", {
+    //   method: "POST",
+    //   body: form,
+    //   mode: "no-cors",
+    // })
+    //   .then((response) => response.text())
+    //   .then((text) => {
+    //     copyToClipboard(text);
+    //   });
+    console.log(`https://pixeldrain.com/api/file/export_${randomUUID}.json`);
+    fetch(`/export/send_file/`, {
+      method: "POST",
+      body: new File([JSON.stringify(exportData!)], "export.json"),
+      headers: {
+        "Content-Type": "multipart/form-data",
+      }
+    }).then((response) => response.json()).then((text) => {
+      console.log(text);
+      copyToClipboard(text.id);
+    });
+  }
+
+  function importFromFileIo() {
+    fetch(`/export/get_file/?filename=${fileName}`).then((response) => response.text()).then((text) => {
+      const data = JSON.parse(text);
+      console.log(data);
+      importFromJson(data);
+      setImportModalOpen(false);
+    })
+  }
   return (
     <div className="p-5 flex gap-1 flex-wrap">
       <Popover>
@@ -188,6 +237,9 @@ export default function Page() {
             )}
             <Button onClick={exportToClipboard}>
               <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
+            </Button>
+            <Button onClick={saveToFileIo}>
+              <ArrowDownUp className="inline mr-1 w-4 h-4" /> Сохранить
             </Button>
           </div>
         </PopoverContent>
@@ -224,6 +276,30 @@ export default function Page() {
                 </div>
               )}
             </Button>
+            <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <ArrowDownUp className="inline mr-1 w-4 h-4" /> Импорт с
+                  сервера
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Импорт с сервера</DialogTitle>
+                  <DialogDescription>
+                    Импортируйте данные из сервера
+                  </DialogDescription>
+                </DialogHeader>
+                <Input
+                  placeholder="Имя файла"
+                  value={fileName}
+                  onChange={(e) => setFileName(e.target.value)}
+                />
+                <Button className="w-full" onClick={importFromFileIo}>
+                  Импорт
+                </Button>
+              </DialogContent>
+            </Dialog>
           </div>
         </PopoverContent>
       </Popover>
