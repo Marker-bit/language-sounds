@@ -185,7 +185,7 @@ export async function addSilenceToAudioBlob(
   return newBlob;
 }
 
-import * as toWav from "audiobuffer-to-wav";
+import toWav from "audiobuffer-to-wav";
 
 // Function to convert base64 string to Buffer
 function base64ToBuffer(base64: string): Buffer {
