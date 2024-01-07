@@ -57,6 +57,11 @@ export default function Decks() {
                 {deck?.fromLanguage?.title} — {deck?.toLanguage?.title}
               </span>
             </div>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="p-1 w-auto h-auto rounded-full">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
           </div>
           <DropdownMenuContent>
             <DropdownMenuItem
