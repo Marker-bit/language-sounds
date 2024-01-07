@@ -35,26 +35,27 @@ export default function Decks() {
   return (
     <div className="flex gap-2 flex-wrap p-2">
       {decks.map((deck: any) => (
-        <div
-          className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors flex items-center gap-1"
-          key={deck.id}
-          onClick={() => router.push(`/decks/${deck.id}`)}
-        >
-          <span>{deck.title || "Без названия"}</span>
-          <DropdownMenu>
+        <DropdownMenu key={deck.id}>
+          <div
+            className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors flex items-center gap-1"
+            onClick={() => router.push(`/decks/${deck.id}`)}
+          >
+            <span>{deck.title || "Без названия"}</span>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="rounded-full p-1 h-auto">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => onOpen("editDeck", null, null, deck)}>
-                <Pencil className="w-4 h-4 mr-2" />
-                Редактировать
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          </div>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => onOpen("editDeck", null, null, deck)}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Редактировать
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ))}
       <div
         role="button"
