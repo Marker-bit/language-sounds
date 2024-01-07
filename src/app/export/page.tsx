@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   ClipboardPaste,
   ClipboardX,
+  Copy,
   FileDown,
   Files,
   Link,
@@ -42,6 +43,7 @@ export default function Page() {
   const [fileName, setFileName] = useState<string>("");
   const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
   const [importLoading, setImportLoading] = useState<boolean>(false);
+  const [fileId, setFileId] = useState<string>("");
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -131,12 +133,10 @@ export default function Page() {
   }
 
   function copyToClipboard(text: string) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand("copy");
-    document.body.removeChild(textArea);
+    console.log(text);
+    navigator.clipboard.writeText(text).then(() => {
+      console.log("Text copied to clipboard");
+    });
   }
 
   function exportToClipboard() {
@@ -203,23 +203,28 @@ export default function Page() {
       body: new File([JSON.stringify(exportData!)], "export.json"),
       headers: {
         "Content-Type": "multipart/form-data",
-      }
-    }).then((response) => response.json()).then((text) => {
-      console.log(text);
-      copyToClipboard(text.id);
-      setImportLoading(false);
-    });
+      },
+    })
+      .then((response) => response.json())
+      .then((text) => {
+        console.log(text);
+        copyToClipboard(text.id);
+        setFileId(text.id);
+        setImportLoading(false);
+      });
   }
 
   function importFromFileIo() {
     setImportLoading(true);
-    fetch(`/export/get_file/?filename=${fileName}`).then((response) => response.text()).then((text) => {
-      const data = JSON.parse(text);
-      console.log(data);
-      importFromJson(data);
-      setImportLoading(false);
-      setImportModalOpen(false);
-    })
+    fetch(`/export/get_file/?filename=${fileName}`)
+      .then((response) => response.text())
+      .then((text) => {
+        const data = JSON.parse(text);
+        console.log(data);
+        importFromJson(data);
+        setImportLoading(false);
+        setImportModalOpen(false);
+      });
   }
   return (
     <div className="p-5 flex gap-1 flex-wrap">
@@ -244,10 +249,39 @@ export default function Page() {
             <Button onClick={exportToClipboard}>
               <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
             </Button>
-            <Button onClick={saveToFileIo} disabled={importLoading}>
-              {importLoading ? <Loader2 className="inline mr-1 w-4 h-4 animate-spin" /> : <ArrowDownUp className="inline mr-1 w-4 h-4" />}
-               Сохранить
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button onClick={saveToFileIo} disabled={importLoading}>
+                  {importLoading ? (
+                    <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                  ) : (
+                    <ArrowDownUp className="inline mr-1 w-4 h-4" />
+                  )}
+                  Сохранить
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Сохранить</DialogTitle>
+                </DialogHeader>
+                {importLoading ? (
+                  <div className="flex gap-1 items-center justify-center h-80">
+                    <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                  </div>
+                ) : (
+                  <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
+                    <span>{fileId}</span>
+                    <Button
+                      onClick={() => copyToClipboard(fileId)}
+                      className="p-1 ml-1 h-fit"
+                      variant="outline"
+                    >
+                      <Copy className="inline w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
           </div>
         </PopoverContent>
       </Popover>
@@ -302,8 +336,15 @@ export default function Page() {
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                 />
-                <Button disabled={!fileName || importLoading} className="w-full" onClick={importFromFileIo}>
-                  {importLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Импорт
+                <Button
+                  disabled={!fileName || importLoading}
+                  className="w-full"
+                  onClick={importFromFileIo}
+                >
+                  {importLoading && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Импорт
                 </Button>
               </DialogContent>
             </Dialog>
