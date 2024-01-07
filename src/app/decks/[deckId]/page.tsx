@@ -4,7 +4,6 @@ import { useParams } from "next/navigation";
 
 import AudioPlayback from "@/components/audio-playback";
 import { Button } from "@/components/ui/button";
-import Combobox from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,30 +11,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ConcatenateBlobs } from "@/lib/concatenate-blobs";
 import { cn, getDb } from "@/lib/utils";
-import {
-  ArrowLeft,
-  ArrowRight,
-  AudioLines,
-  Check,
-  Download,
-  Loader2,
-  RotateCw,
-  Save,
-  Trash,
-} from "lucide-react";
+import { AudioLines, Check, Loader2, RotateCw, Save } from "lucide-react";
 import * as React from "react";
-import { addSilenceToAudioBlob, dataURItoBlob, addSilenceToAudioDataUri, concatenateAudioDataUris } from "@/lib/audio-silencer";
+import {
+  addSilenceToAudioDataUri,
+  concatenateAudioDataUris,
+} from "@/lib/audio-silencer";
 
 import type { Deck, Word } from "@/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-  SelectTrigger,
-} from "@/components/ui/select";
 
 export default function Page() {
   const params = useParams();
@@ -43,8 +27,8 @@ export default function Page() {
   const [languages, setLanguages] = React.useState<any[]>([]);
   const [words1, setWords1] = React.useState<any[]>([]);
   const [words2, setWords2] = React.useState<any[]>([]);
-  const [changedWords1, setChangedWords1] = React.useState<any[]>([]);
-  const [changedWords2, setChangedWords2] = React.useState<any[]>([]);
+  const [saveSettingsDone, setSaveSettingsDone] =
+    React.useState<boolean>(false);
   const [selected1, setSelected1] = React.useState<any | null>(null);
   const [selected2, setSelected2] = React.useState<any | null>(null);
   const [pairs, setPairs] = React.useState<any[]>([]);
@@ -61,8 +45,6 @@ export default function Page() {
   React.useEffect(() => {
     if (selected1 && selected2) {
       setPairs((prevPairs) => [...prevPairs, { selected1, selected2 }]);
-      setChangedWords1((words1) => words1.filter((w) => w !== selected1));
-      setChangedWords2((words2) => words2.filter((w) => w !== selected2));
       setSelected1(null);
       setSelected2(null);
     }
@@ -84,62 +66,10 @@ export default function Page() {
     setSelected2(value);
   }
 
-  async function updateWords1(value: string) {
-    if (value === null) {
-      setWords1([]);
-      return;
-    }
-    getDb((db) => {
-      let transaction = db.transaction("words", "readwrite");
-      let store = transaction.objectStore("words");
-
-      store.getAll().onsuccess = (event: any) => {
-        setWords1(
-          event.target.result.filter(
-            (w: any) => w.languageId === parseInt(value)
-          )
-        );
-        setChangedWords1(
-          event.target.result.filter(
-            (w: any) => w.languageId === parseInt(value)
-          )
-        );
-        return;
-      };
-    });
-  }
-
   function reset() {
     setPairs([]);
     setSelected1(null);
     setSelected2(null);
-    setChangedWords1(words1);
-    setChangedWords2(words2);
-  }
-
-  async function updateWords2(value: string) {
-    if (value === null) {
-      setWords2([]);
-      return;
-    }
-    getDb((db) => {
-      let transaction = db.transaction("words", "readwrite");
-      let store = transaction.objectStore("words");
-
-      store.getAll().onsuccess = (event: any) => {
-        setWords2(
-          event.target.result.filter(
-            (w: any) => w.languageId === parseInt(value)
-          )
-        );
-        setChangedWords2(
-          event.target.result.filter(
-            (w: any) => w.languageId === parseInt(value)
-          )
-        );
-        return;
-      };
-    });
   }
 
   function savePairs() {
@@ -158,7 +88,6 @@ export default function Page() {
     });
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   function refreshDeck() {
     setLoading(true);
     getDb((db) => {
@@ -183,16 +112,6 @@ export default function Page() {
               (w: any) => w.languageId === event.target.result.toLanguageId
             )
           );
-          setChangedWords1(
-            event2.target.result.filter(
-              (w: any) => w.languageId === event.target.result.fromLanguageId
-            )
-          );
-          setChangedWords2(
-            event2.target.result.filter(
-              (w: any) => w.languageId === event.target.result.toLanguageId
-            )
-          );
         };
       };
     });
@@ -203,48 +122,15 @@ export default function Page() {
   }, []);
 
   React.useEffect(() => {
+    importSettings();
     refreshDeck();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // async function makeRecording() {
-  //   let fullyMerged = [];
-  //   for (const w of pairs) {
-  //     const { selected1: word1, selected2: word2 } = w;
-  //     let blob1 = dataURItoBlob(word1.audio);
-  //     let blob2 = dataURItoBlob(word2.audio);
-
-  //     const newAudioBlob = await addSilenceToAudioBlob(
-  //       audioCtx.current,
-  //       blob1,
-  //       wordTranslationDelay
-  //     );
-  //     const newAudioBlob2 = await addSilenceToAudioBlob(
-  //       audioCtx.current,
-  //       blob2,
-  //       pairsDelay
-  //     );
-  //     fullyMerged.push(newAudioBlob, newAudioBlob2);
-  //   }
-  //   ConcatenateBlobs(fullyMerged, "audio/wav", (res: Blob) => {
-  //     // const audioElement = new Audio(URL.createObjectURL(res));
-  //     // audioElement.controls = true;
-  //     // document.body.appendChild(audioElement);
-  //     // let reader = new FileReader();
-  //     // reader.readAsDataURL(res);
-  //     // //creates a playable URL from the blob file.
-  //     // reader.onload = function () {
-  //     //   setResultAudioUrl(reader.result as string);
-  //     // };
-  //     setResultAudioUrl(URL.createObjectURL(res));
-  //   });
-  // }
   async function makeRecording() {
     let fullyMerged = [];
     for (const w of pairs) {
       const { selected1: word1, selected2: word2 } = w;
-      let blob1 = dataURItoBlob(word1.audio);
-      let blob2 = dataURItoBlob(word2.audio);
-
       const newDataUri = await addSilenceToAudioDataUri(
         word1.audio,
         wordTranslationDelay
@@ -266,17 +152,39 @@ export default function Page() {
     setResultAudioUrl(resultUri);
   }
 
-  React.useEffect(() => {
-    getDb((db) => {
-      let transaction = db.transaction("languages", "readwrite");
-      let store = transaction.objectStore("languages");
+  function saveSettings() {
+    window.localStorage.setItem(
+      "settings",
+      JSON.stringify({
+        wordTranslationDelay,
+        pairsDelay,
+      })
+    );
+    setSaveSettingsDone(true);
+    setTimeout(() => setSaveSettingsDone(false), 1000);
+  }
 
-      store.getAll().onsuccess = (event: any) => {
-        setLanguages(event.target.result);
-      };
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  function importSettings() {
+    const settingsJson = window.localStorage.getItem("settings");
+    if (!settingsJson) {
+      return;
+    }
+    const settings = JSON.parse(settingsJson);
+    setWordTranslationDelay(settings.wordTranslationDelay);
+    setPairsDelay(settings.pairsDelay);
+  }
+
+  // React.useEffect(() => {
+  //   getDb((db) => {
+  //     let transaction = db.transaction("languages", "readwrite");
+  //     let store = transaction.objectStore("languages");
+
+  //     store.getAll().onsuccess = (event: any) => {
+  //       setLanguages(event.target.result);
+  //     };
+  //   });
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []);
   if (loading) {
     return (
       <div className="flex h-screen flex-col items-center justify-center">
@@ -291,7 +199,7 @@ export default function Page() {
         <div className="flex flex-col gap-1 items-center">
           <p>{deck?.fromLanguage?.title}</p>
           {words1.map((word) => {
-            for (const { selected1, selected2} of pairs) {
+            for (const { selected1, selected2 } of pairs) {
               if (word.id === selected1?.id || word.id === selected2?.id) {
                 return null;
               }
@@ -313,7 +221,7 @@ export default function Page() {
         <div className="flex flex-col gap-1 items-center">
           <p>{deck?.toLanguage?.title}</p>
           {words2.map((word) => {
-            for (const { selected1, selected2} of pairs) {
+            for (const { selected1, selected2 } of pairs) {
               if (word.id === selected1?.id || word.id === selected2?.id) {
                 return null;
               }
@@ -398,6 +306,23 @@ export default function Page() {
                           }
                         />
                       </div>
+                      {saveSettingsDone ? (
+                        <Button
+                          className="mt-2"
+                          onClick={saveSettings}
+                          variant="outline"
+                        >
+                          <Check className="w-5 h-5" />
+                        </Button>
+                      ) : (
+                        <Button
+                          className="mt-2"
+                          onClick={saveSettings}
+                          variant="outline"
+                        >
+                          Сохранить настройки
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </PopoverContent>

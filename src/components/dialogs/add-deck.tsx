@@ -124,6 +124,23 @@ export const AddDeckModal = () => {
     });
   }, []);
 
+  function updateTitle(field: any, value: any) {
+    console.log("yee");
+    field.onChange(value);
+    const title = form.getValues("title");
+    if (form.getValues("title") === "" || title.match(/.* — .*/)) {
+      const fromLanguage: Language = languages.find(
+        (l: Language) => l.id === parseInt(form.getValues("fromLanguageId"))
+      )!;
+      const toLanguage: Language = languages.find(
+        (l: Language) => l.id === parseInt(form.getValues("toLanguageId"))
+      )!;
+      if (fromLanguage && toLanguage) {
+        form.setValue("title", `${fromLanguage.title} — ${toLanguage.title}`);
+      }
+    }
+  }
+
   return (
     <Dialog open={isModalOpen} onOpenChange={handleClose}>
       <DialogContent>
@@ -155,7 +172,7 @@ export const AddDeckModal = () => {
                 <FormItem>
                   <FormLabel>С языка</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => updateTitle(field, value)}
                     defaultValue={field.value?.toString()}
                   >
                     <SelectTrigger>
@@ -185,7 +202,7 @@ export const AddDeckModal = () => {
                 <FormItem>
                   <FormLabel>На язык</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
+                    onValueChange={(value) => updateTitle(field, value)}
                     defaultValue={field.value?.toString()}
                   >
                     <SelectTrigger>
