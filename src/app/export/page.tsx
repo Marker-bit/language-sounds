@@ -26,6 +26,7 @@ import {
   FileDown,
   Files,
   Link,
+  Loader2,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,6 +41,7 @@ export default function Page() {
   const [clipboardDone, setClipboardDone] = useState(false);
   const [fileName, setFileName] = useState<string>("");
   const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
+  const [importLoading, setImportLoading] = useState<boolean>(false);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -181,6 +183,7 @@ export default function Page() {
   }
 
   function saveToFileIo() {
+    setImportLoading(true);
     let randomUUID = Math.random().toString(36).slice(10);
     const form = new FormData();
     form.append("file", new File([JSON.stringify(exportData!)], "export.json"));
@@ -204,14 +207,17 @@ export default function Page() {
     }).then((response) => response.json()).then((text) => {
       console.log(text);
       copyToClipboard(text.id);
+      setImportLoading(false);
     });
   }
 
   function importFromFileIo() {
+    setImportLoading(true);
     fetch(`/export/get_file/?filename=${fileName}`).then((response) => response.text()).then((text) => {
       const data = JSON.parse(text);
       console.log(data);
       importFromJson(data);
+      setImportLoading(false);
       setImportModalOpen(false);
     })
   }
@@ -238,8 +244,9 @@ export default function Page() {
             <Button onClick={exportToClipboard}>
               <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
             </Button>
-            <Button onClick={saveToFileIo}>
-              <ArrowDownUp className="inline mr-1 w-4 h-4" /> Сохранить
+            <Button onClick={saveToFileIo} disabled={importLoading}>
+              {importLoading ? <Loader2 className="inline mr-1 w-4 h-4 animate-spin" /> : <ArrowDownUp className="inline mr-1 w-4 h-4" />}
+               Сохранить
             </Button>
           </div>
         </PopoverContent>
@@ -295,8 +302,8 @@ export default function Page() {
                   value={fileName}
                   onChange={(e) => setFileName(e.target.value)}
                 />
-                <Button className="w-full" onClick={importFromFileIo}>
-                  Импорт
+                <Button disabled={!fileName || importLoading} className="w-full" onClick={importFromFileIo}>
+                  {importLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Импорт
                 </Button>
               </DialogContent>
             </Dialog>
