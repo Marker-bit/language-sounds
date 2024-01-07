@@ -12,7 +12,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn, getDb } from "@/lib/utils";
-import { AudioLines, Check, Loader2, RotateCw, Save } from "lucide-react";
+import {
+  AudioLines,
+  Check,
+  Loader2,
+  RotateCw,
+  Save,
+  XIcon,
+} from "lucide-react";
 import * as React from "react";
 import {
   addSilenceToAudioDataUri,
@@ -174,6 +181,14 @@ export default function Page() {
     setPairsDelay(settings.pairsDelay);
   }
 
+  function removePair({ selected1, selected2 }: any) {
+    setPairs((prevPairs) =>
+      prevPairs.filter(
+        (p) => p.selected1 !== selected1 && p.selected2 !== selected2
+      )
+    );
+  }
+
   // React.useEffect(() => {
   //   getDb((db) => {
   //     let transaction = db.transaction("languages", "readwrite");
@@ -252,94 +267,97 @@ export default function Page() {
               <span>{selected1.word}</span> —
               <AudioPlayback audio={selected2.audio!} />
               <span>{selected2.word}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                onClick={() => removePair({ selected1, selected2 })}
+              >
+                <XIcon className="w-4 h-4" />
+              </Button>
             </div>
           )
         )}
         <div className="flex gap-1 flex-wrap justify-center">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">Настройки</Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96 max-sm:w-lvw">
+              <div className="grid gap-4">
+                <div className="space-y-2">
+                  <h4 className="font-medium leading-none">
+                    Настройки озвучки
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    Выберите паузы между словами.
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="width">Между парами</Label>
+                    <Input
+                      id="pairsDelay"
+                      type="number"
+                      className="col-span-2 h-8"
+                      value={pairsDelay}
+                      onChange={(e) => setPairsDelay(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Пауза между парами слов.
+                    <br />
+                    Например: &quot;—&quot; ⏳ &quot;—&quot; [пауза между
+                    парами] &quot;—&quot; ⏳ &quot;—&quot; [пауза между парами]{" "}
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="maxWidth">Между словом и переводом</Label>
+                    <Input
+                      id="wordTranslationDelay"
+                      className="col-span-2 h-8"
+                      type="number"
+                      value={wordTranslationDelay}
+                      onChange={(e) =>
+                        setWordTranslationDelay(Number(e.target.value))
+                      }
+                    />
+                  </div>
+                  {saveSettingsDone ? (
+                    <Button
+                      className="mt-2"
+                      onClick={saveSettings}
+                      variant="outline"
+                    >
+                      <Check className="w-5 h-5" />
+                    </Button>
+                  ) : (
+                    <Button
+                      className="mt-2"
+                      onClick={saveSettings}
+                      variant="outline"
+                    >
+                      Сохранить настройки
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button onClick={savePairs} variant="ghost">
+            {saveDone ? (
+              <>
+                <Check className="w-5 h-5 mr-1" />
+                Сохранено
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5 mr-1" />
+                Сохранить
+              </>
+            )}
+          </Button>
           {pairs.length !== 0 && (
             <>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline">Настройки</Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-96 max-sm:w-lvw">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <h4 className="font-medium leading-none">
-                        Настройки озвучки
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        Выберите паузы между словами.
-                      </p>
-                    </div>
-                    <div className="grid gap-2">
-                      <div className="grid grid-cols-3 items-center gap-4">
-                        <Label htmlFor="width">Между парами</Label>
-                        <Input
-                          id="pairsDelay"
-                          type="number"
-                          className="col-span-2 h-8"
-                          value={pairsDelay}
-                          onChange={(e) =>
-                            setPairsDelay(Number(e.target.value))
-                          }
-                        />
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        Пауза между парами слов.
-                        <br />
-                        Например: &quot;—&quot; ⏳ &quot;—&quot; [пауза между
-                        парами] &quot;—&quot; ⏳ &quot;—&quot; [пауза между
-                        парами]{" "}
-                      </div>
-                      <div className="grid grid-cols-3 items-center gap-4">
-                        <Label htmlFor="maxWidth">
-                          Между словом и переводом
-                        </Label>
-                        <Input
-                          id="wordTranslationDelay"
-                          className="col-span-2 h-8"
-                          type="number"
-                          value={wordTranslationDelay}
-                          onChange={(e) =>
-                            setWordTranslationDelay(Number(e.target.value))
-                          }
-                        />
-                      </div>
-                      {saveSettingsDone ? (
-                        <Button
-                          className="mt-2"
-                          onClick={saveSettings}
-                          variant="outline"
-                        >
-                          <Check className="w-5 h-5" />
-                        </Button>
-                      ) : (
-                        <Button
-                          className="mt-2"
-                          onClick={saveSettings}
-                          variant="outline"
-                        >
-                          Сохранить настройки
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              <Button onClick={savePairs} variant="ghost">
-                {saveDone ? (
-                  <>
-                    <Check className="w-5 h-5 mr-1" />
-                    Сохранено
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-5 h-5 mr-1" />
-                    Сохранить
-                  </>
-                )}
-              </Button>
               <Button onClick={reset} variant="ghost">
                 <RotateCw className="w-5 h-5 mr-1" />
                 Сбросить
