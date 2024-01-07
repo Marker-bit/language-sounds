@@ -63,7 +63,7 @@ export default function Page() {
           <h1 className="text-3xl font-bold">{language?.title}</h1>
           <Button
             variant="outline"
-            onClick={() => onOpen("addWord", language, null)}
+            onClick={() => onOpen("addWord", language, null, null)}
           >
             <CopyPlus className="w-4 h-4 mr-2" /> Добавить слово
           </Button>
@@ -82,13 +82,13 @@ export default function Page() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem
-                    onClick={() => onOpen("editWord", language, word)}
+                    onClick={() => onOpen("editWord", language, word, null)}
                   >
                     <Edit className="w-4 h-4 mr-2" />
                     <span>Редактировать</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => onOpen("deleteWord", language, word)}
+                    onClick={() => onOpen("deleteWord", language, word, null)}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
                     <span>Удалить</span>
