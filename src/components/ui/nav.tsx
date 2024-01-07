@@ -27,6 +27,15 @@ export default function Nav() {
         >
           Колоды
         </Link>
+        <Link
+          className={cn(
+            "text-zinc-600 dark:text-zinc-400 transition hover:bg-zinc-200 hover:dark:bg-zinc-800 px-2 rounded-md",
+            pathname === "/export" && "font-bold text-black dark:text-white"
+          )}
+          href="/export"
+        >
+          Экспорт и импорт
+        </Link>
       </div>
     </>
   );
