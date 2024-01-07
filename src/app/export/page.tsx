@@ -14,6 +14,7 @@ import {
   ClipboardX,
   FileDown,
   Files,
+  Link,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -21,7 +22,7 @@ export default function Page() {
   const [done, setDone] = useState(false);
   const [exportUrl, setExportUrl] = useState<string | null>(null);
   const [exportBlobUrl, setExportBlobUrl] = useState<string | null>(null);
-  const [exportData, setExportData] = useState<string | null>(null);
+  const [exportData, setExportData] = useState<object | null>(null);
   const [clipboardTestState, setClipboardTestState] = useState<
     "idle" | "success" | "error"
   >("idle");
@@ -57,7 +58,7 @@ export default function Page() {
             const url2 = URL.createObjectURL(blob);
             setExportUrl(url);
             setExportBlobUrl(url2);
-            setExportData(text);
+            setExportData(jsonData);
             // const link = document.createElement("a");
             // link.href = url;
             // link.download = "export.json";
@@ -123,6 +124,18 @@ export default function Page() {
     document.body.removeChild(textArea);
   }
 
+  function exportToClipboard() {
+    navigator.clipboard
+      .writeText(JSON.stringify(exportData!))
+      .then(() => {
+        setClipboardTestState("success");
+      })
+      .catch((err) => {
+        console.error("Failed to write to clipboard: ", err);
+        setClipboardTestState("error");
+      });
+  }
+
   function testClipboard() {
     setClipboardTestState("idle");
     copyToClipboard("test");
@@ -154,12 +167,14 @@ export default function Page() {
       });
   }
   return (
-    <div className="p-5 flex gap-1">
+    <div className="p-5 flex gap-1 flex-wrap">
       <Popover>
         <PopoverTrigger asChild>
-          <Button onClick={exportFunc}>Экспорт</Button>
+          <Button className="max-sm:w-full" onClick={exportFunc}>
+            Экспорт
+          </Button>
         </PopoverTrigger>
-        <PopoverContent>
+        <PopoverContent className="max-sm:w-screen">
           <div className="flex flex-col gap-1">
             {exportUrl && (
               <a href={exportUrl} download="export.json" className="w-full">
@@ -171,7 +186,7 @@ export default function Page() {
                 <Button className="w-full">Скачать 2</Button>
               </a>
             )}
-            <Button onClick={() => copyToClipboard(exportData as string)}>
+            <Button onClick={exportToClipboard}>
               <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
             </Button>
           </div>
@@ -180,7 +195,7 @@ export default function Page() {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button>Импорт</Button>
+          <Button className="max-sm:w-full">Импорт</Button>
         </PopoverTrigger>
         <PopoverContent>
           <div className="flex flex-col gap-1">
@@ -213,39 +228,41 @@ export default function Page() {
         </PopoverContent>
       </Popover>
 
-      <Button onClick={testClipboard}>
-        {clipboardTestState === "success" && (
-          <div>
-            <ClipboardCheck className="text-green-500 inline mr-1 w-4 h-4" />{" "}
-            Буфер обмена работает
-          </div>
-        )}
-        {clipboardTestState === "error" && (
-          <div>
-            <ClipboardX className="text-red-500 inline mr-1 w-4 h-4" /> Буфер
-            обмена не работает
-          </div>
-        )}
-        {clipboardTestState === "idle" && (
-          <div>
-            <Clipboard className="inline mr-1 w-4 h-4" /> Тест буфера обмена
-          </div>
-        )}
-      </Button>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            ?
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent>
-          <p>
-            Сначала скопируется текст &quot;test&quot; в буфер обмена, затем
-            проверится получение текста из буфера (браузер может запросить
-            чтение)
-          </p>
-        </PopoverContent>
-      </Popover>
+      <div className="flex gap-1 max-sm:w-full">
+        <Button className="max-sm:w-full" onClick={testClipboard}>
+          {clipboardTestState === "success" && (
+            <div>
+              <ClipboardCheck className="text-green-500 inline mr-1 w-4 h-4" />{" "}
+              Буфер обмена работает
+            </div>
+          )}
+          {clipboardTestState === "error" && (
+            <div>
+              <ClipboardX className="text-red-500 inline mr-1 w-4 h-4" /> Буфер
+              обмена не работает
+            </div>
+          )}
+          {clipboardTestState === "idle" && (
+            <div>
+              <Clipboard className="inline mr-1 w-4 h-4" /> Тест буфера обмена
+            </div>
+          )}
+        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="icon" className="rounded-full">
+              ?
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <p>
+              Сначала скопируется текст &quot;test&quot; в буфер обмена, затем
+              проверится получение текста из буфера (браузер может запросить
+              чтение)
+            </p>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 }
