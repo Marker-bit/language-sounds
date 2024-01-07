@@ -6,6 +6,7 @@ import { useState } from "react";
 
 export default function Page() {
   const [done, setDone] = useState(false);
+  const [exportUrl, setExportUrl] = useState<string | null>(null);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -30,8 +31,10 @@ export default function Page() {
               pairs,
             };
             const text = JSON.stringify(jsonData);
-            link.href =
+            const url =
               "data:text/plain;charset=utf-8," + encodeURIComponent(text);
+            setExportUrl(url);
+            link.href = url;
             link.download = "export.json";
             document.body.appendChild(link).click();
           };
@@ -72,13 +75,16 @@ export default function Page() {
           }
           setDone(true);
         });
-      }
-    }
+      };
+    };
   }
   return (
     <div className="p-5 flex gap-1">
       <Button onClick={exportFunc}>Экспорт</Button>
       <Button onClick={importFunc}>Импорт</Button>
+      {exportUrl && (
+        <a href={exportUrl} download="export.json">Скачать</a>
+      )}
       {done && <div className="text-green-500">Импорт завершен</div>}
     </div>
   );
