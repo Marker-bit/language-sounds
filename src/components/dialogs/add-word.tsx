@@ -37,7 +37,7 @@ import {
 import AudioPlayback from "../audio-playback";
 
 const formSchema = z.object({
-  word: z.string().min(1),
+  word: z.string().min(1, "Введите слово"),
 });
 
 export const AddWordModal = () => {

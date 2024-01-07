@@ -7,7 +7,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -24,7 +23,7 @@ import { getDb } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1, "Введите название"),
 });
 
 export const EditLanguageModal = () => {

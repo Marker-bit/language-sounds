@@ -23,7 +23,7 @@ import { getDb } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().min(1, "Введите название"),
 });
 
 export const AddLanguageModal = () => {

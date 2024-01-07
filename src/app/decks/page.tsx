@@ -9,7 +9,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useModal } from "@/hooks/use-modal-store";
 import { getDb } from "@/lib/utils";
-import { MoreHorizontal, Pencil, Plus, Trash } from "lucide-react";
+import { Deck } from "@/types";
+import {
+  ArrowLeftRight,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Trash,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -34,18 +41,22 @@ export default function Decks() {
 
   return (
     <div className="flex gap-2 flex-wrap p-2">
-      {decks.map((deck: any) => (
+      {decks.map((deck: Deck) => (
         <DropdownMenu key={deck.id}>
           <div
-            className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors flex items-center gap-1"
+            className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors flex items-center gap-1 cursor-pointer"
             onClick={() => router.push(`/decks/${deck.id}`)}
           >
-            <span>{deck.title || "Без названия"}</span>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="rounded-full p-1 h-auto">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
+            <div className="flex flex-col">
+              <span>{deck.title || "Без названия"}</span>
+              <span className="text-xs text-zinc-400">
+                {deck.pairs.length}{" "}
+                <ArrowLeftRight className="w-4 h-4 inline" />
+              </span>
+              <span className="text-xs text-zinc-400">
+                {deck?.fromLanguage?.title} — {deck?.toLanguage?.title}
+              </span>
+            </div>
           </div>
           <DropdownMenuContent>
             <DropdownMenuItem
@@ -65,10 +76,12 @@ export default function Decks() {
       ))}
       <div
         role="button"
-        className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors cursor-pointer"
+        className="border border-zinc-100 rounded-md p-2 hover:border-zinc-200 transition-colors cursor-pointer flex items-center justify-center"
         onClick={() => onOpen("addDeck", null, null, null)}
       >
-        <Plus className="w-4 h-4 mr-1 inline" /> Добавить
+        <div>
+          <Plus className="w-4 h-4 mr-1 inline" /> Добавить
+        </div>
       </div>
     </div>
   );

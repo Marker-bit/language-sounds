@@ -7,13 +7,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
-import * as z from "zod";
 import { useModal } from "@/hooks/use-modal-store";
 import { getDb } from "@/lib/utils";
-
-const formSchema = z.object({
-  title: z.string().min(1),
-});
 
 export const DeleteWordModal = () => {
   const { isOpen, onClose, type, word } = useModal();

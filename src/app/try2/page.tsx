@@ -29,8 +29,8 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const formSchema = z.object({
-  word: z.string().min(1),
-  language: z.string().min(1),
+  word: z.string().min(1, "Слово не может быть пустым"),
+  language: z.string().min(1, "Выберите язык"),
 });
 
 export default function Page() {

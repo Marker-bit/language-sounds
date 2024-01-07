@@ -6,28 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../ui/form";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useModal } from "@/hooks/use-modal-store";
-import { useEffect } from "react";
 import { getDb } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-
-const formSchema = z.object({
-  title: z.string().min(1),
-});
 
 export const DeleteLanguageModal = () => {
   const { isOpen, onClose, type, language } = useModal();

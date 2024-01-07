@@ -22,7 +22,7 @@ import { useEffect } from "react";
 import { getDb } from "@/lib/utils";
 
 const formSchema = z.object({
-  word: z.string().min(1),
+  word: z.string().min(1, "Введите название"),
 });
 
 export const EditWordModal = () => {

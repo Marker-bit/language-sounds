@@ -23,19 +23,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useModal } from "@/hooks/use-modal-store";
 import { useEffect, useRef, useState } from "react";
 import { getDb } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
-  Check,
   Loader2,
-  Mic,
-  MicOff,
-  Pause,
-  PlayCircle,
-  Save,
-  Square,
 } from "lucide-react";
-import AudioPlayback from "../audio-playback";
 import {
   Select,
   SelectContent,
@@ -47,9 +37,13 @@ import { Language } from "@/types";
 
 const formSchema = z
   .object({
-    fromLanguageId: z.string(),
-    toLanguageId: z.string(),
-    title: z.string().min(1),
+    fromLanguageId: z.string({
+      required_error: "Выберите язык",
+    }),
+    toLanguageId: z.string({
+      required_error: "Выберите язык",
+    }),
+    title: z.string().min(1, "Введите название"),
   })
   .refine(
     ({ fromLanguageId, toLanguageId }) => fromLanguageId !== toLanguageId,
