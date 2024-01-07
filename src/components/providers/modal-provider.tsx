@@ -9,6 +9,7 @@ import { DeleteWordModal } from "../dialogs/delete-word";
 import { AddDeckModal } from "../dialogs/add-deck";
 import { EditDeckModal } from "../dialogs/edit-deck";
 import { DeleteDeckModal } from "../dialogs/delete-deck";
+import { AddLanguageModal } from "../dialogs/add-language";
 
 export const ModalProvider = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -23,6 +24,7 @@ export const ModalProvider = () => {
 
   return (
     <>
+      <AddLanguageModal />
       <EditLanguageModal />
       <DeleteLanguageModal />
       <AddWordModal />
