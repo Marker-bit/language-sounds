@@ -19,6 +19,8 @@ import { getDb } from "@/lib/utils";
 import { randomUUID } from "crypto";
 import {
   ArrowDownUp,
+  BookA,
+  Check,
   Clipboard,
   ClipboardCheck,
   ClipboardPaste,
@@ -27,7 +29,9 @@ import {
   FileDown,
   Files,
   Link,
+  List,
   Loader2,
+  ScrollText,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -44,6 +48,8 @@ export default function Page() {
   const [importModalOpen, setImportModalOpen] = useState<boolean>(false);
   const [importLoading, setImportLoading] = useState<boolean>(false);
   const [fileId, setFileId] = useState<string>("");
+  const [importedData, setImportedData] = useState<any | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -214,9 +220,10 @@ export default function Page() {
     })
       .then((response) => response.text())
       .then((text) => {
-        console.log(text);
-        copyToClipboard(text);
-        setFileId(text);
+        const data = JSON.parse(text);
+        console.log(data);
+        copyToClipboard(data.key);
+        setFileId(data.key);
         setImportLoading(false);
       });
   }
@@ -228,9 +235,13 @@ export default function Page() {
       .then((text) => {
         const data = JSON.parse(text);
         console.log(data);
-        importFromJson(data);
+        if (!data || data?.success === false) {
+          setImportError("Некорректные данные");
+          setImportLoading(false);
+          return;
+        }
+        setImportedData(data);
         setImportLoading(false);
-        setImportModalOpen(false);
       });
   }
   return (
@@ -356,6 +367,36 @@ export default function Page() {
                   )}
                   Импорт
                 </Button>
+                {importError && (
+                  <div className="text-red-500">{importError}</div>
+                )}
+                {importedData && (
+                  <div className="flex gap-1 items-center justify-center">
+                    <div>
+                      <span>{importedData?.languages?.length}</span>
+                      <BookA className="inline ml-1 w-4 h-4" />
+                    </div>
+                    <div>
+                      <span>{importedData?.pairs?.length}</span>
+                      <List className="inline ml-1 w-4 h-4" />
+                    </div>
+                    <div>
+                      <span>{importedData?.words?.length}</span>
+                      <ScrollText className="inline ml-1 w-4 h-4" />
+                    </div>
+                    <Button
+                      onClick={() => {
+                        importFromJson(importedData);
+                        setImportModalOpen(false);
+                        setImportedData(null);
+                      }}
+                      size="icon"
+                      className="h-fit w-fit p-1 rounded-full"
+                    >
+                      <Check className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
