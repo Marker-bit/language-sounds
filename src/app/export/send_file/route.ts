@@ -38,7 +38,11 @@ export async function POST(req: Request) {
   form.append("file", file);
   form.append("expires", expires.toISOString());
   const resp = await axios.default
-    .post(apiUrl, form);
+    .post(apiUrl, form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
   const text = resp.data;
   console.log(text);
   return NextResponse.json(text);
