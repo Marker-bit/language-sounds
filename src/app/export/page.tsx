@@ -34,6 +34,9 @@ import {
   ScrollText,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
+import ConfettiExplosion from "react-confetti-explosion";
+import { NextConfetti } from "@/components/ui/confetti";
 
 export default function Page() {
   const [done, setDone] = useState(false);
@@ -50,6 +53,7 @@ export default function Page() {
   const [fileId, setFileId] = useState<string>("");
   const [importedData, setImportedData] = useState<any | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false);
   function exportFunc() {
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
@@ -150,6 +154,7 @@ export default function Page() {
     console.log(text);
     navigator.clipboard.writeText(text).then(() => {
       console.log("Text copied to clipboard");
+      toast.success("Скопировано");
     });
   }
 
@@ -211,20 +216,35 @@ export default function Page() {
     //   .then((text) => {
     //     copyToClipboard(text);
     //   });
+    const controller = new AbortController();
+    // 5 second timeout:
+    const timeoutId = setTimeout(() => {
+      toast.error("Превышено время ожидания");
+      controller.abort();
+      setImportLoading(false);
+      setExportDialogOpen(false);
+    }, 20000);
     fetch(`/export/send_file/`, {
       method: "POST",
       body: new File([JSON.stringify(exportData!)], "export.json"),
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      signal: controller.signal,
     })
       .then((response) => response.text())
       .then((text) => {
-        const data = JSON.parse(text);
-        console.log(data);
-        copyToClipboard(data.key);
-        setFileId(data.key);
+        clearTimeout(timeoutId);
+        // const data = JSON.parse(text);
+        // console.log(data);
+        // copyToClipboard(data.key);
+        // setFileId(data.key);
+        console.log(text);
+        const key = text.split("/").pop();
+        copyToClipboard(key!);
+        setFileId(key!);
         setImportLoading(false);
+        toast.success("Сохранено!");
       });
   }
 
@@ -236,208 +256,215 @@ export default function Page() {
         const data = JSON.parse(text);
         console.log(data);
         if (!data || data?.success === false) {
-          setImportError("Некорректные данные");
+          toast.error("Некорректные данные");
           setImportLoading(false);
           return;
         }
+        toast.success("Импортировано! 🎉");
         setImportedData(data);
         setImportLoading(false);
       });
   }
   return (
-    <div className="p-5 flex gap-1 flex-wrap">
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button className="max-sm:w-full" onClick={exportFunc}>
-            Экспорт
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="max-sm:w-screen">
-          <div className="flex flex-col gap-1">
-            {exportUrl && (
-              <a href={exportUrl} download="export.json" className="w-full">
-                <Button className="w-full">Скачать</Button>
-              </a>
-            )}
-            {exportBlobUrl && (
-              <a href={exportBlobUrl} download="export.json" className="w-full">
-                <Button className="w-full">Скачать 2</Button>
-              </a>
-            )}
-            <Button onClick={exportToClipboard}>
-              <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button onClick={saveToFileIo} disabled={importLoading}>
-                  {importLoading ? (
-                    <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
-                  ) : (
-                    <ArrowDownUp className="inline mr-1 w-4 h-4" />
-                  )}
-                  Сохранить
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Сохранить</DialogTitle>
-                </DialogHeader>
-                {importLoading ? (
-                  <div className="flex gap-1 items-center justify-center h-80">
-                    <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
-                  </div>
-                ) : (
-                  <div className="flex gap-1 flex-col items-center">
-                    <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
-                      <span>{fileId}</span>
-                      <Button
-                        onClick={() => copyToClipboard(fileId)}
-                        className="p-1 ml-0.5 h-fit"
-                        variant="outline"
-                      >
-                        <Copy className="inline w-4 h-4" />
-                      </Button>
-                    </div>
-                    <p>Эта ссылка будет активной ещё полчаса.</p>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button className="max-sm:w-full">Импорт</Button>
-        </PopoverTrigger>
-        <PopoverContent>
-          <div className="flex flex-col gap-1">
-            <Button onClick={importFunc}>
-              {done ? (
-                <div>
-                  <FileDown className="inline mr-1 w-4 h-4 text-green-500" />{" "}
-                  Импорт из файла завершен
-                </div>
-              ) : (
-                <div>
-                  <Files className="inline mr-1 w-4 h-4" /> Импорт из файла
-                </div>
-              )}
-            </Button>
-            <Button onClick={importFromClipboard}>
-              {clipboardDone ? (
-                <div>
-                  <ClipboardCheck className="inline mr-1 w-4 h-4 text-green-500" />{" "}
-                  Импорт из буфера обмена завершен
-                </div>
-              ) : (
-                <div>
-                  <ClipboardPaste className="inline mr-1 w-4 h-4" /> Импорт из
-                  буфера обмена
-                </div>
-              )}
-            </Button>
-            <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <ArrowDownUp className="inline mr-1 w-4 h-4" /> Импорт с
-                  сервера
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Импорт с сервера</DialogTitle>
-                  <DialogDescription>
-                    Импортируйте данные из сервера
-                  </DialogDescription>
-                </DialogHeader>
-                <Input
-                  placeholder="Имя файла"
-                  value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
-                />
-                <Button
-                  disabled={!fileName || importLoading}
-                  className="w-full"
-                  onClick={importFromFileIo}
-                >
-                  {importLoading && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
-                  Импорт
-                </Button>
-                {importError && (
-                  <div className="text-red-500">{importError}</div>
-                )}
-                {importedData && (
-                  <div className="flex gap-1 items-center justify-center">
-                    <div>
-                      <span>{importedData?.languages?.length}</span>
-                      <BookA className="inline ml-1 w-4 h-4" />
-                    </div>
-                    <div>
-                      <span>{importedData?.pairs?.length}</span>
-                      <List className="inline ml-1 w-4 h-4" />
-                    </div>
-                    <div>
-                      <span>{importedData?.words?.length}</span>
-                      <ScrollText className="inline ml-1 w-4 h-4" />
-                    </div>
-                    <Button
-                      onClick={() => {
-                        importFromJson(importedData);
-                        setImportModalOpen(false);
-                        setImportedData(null);
-                      }}
-                      size="icon"
-                      className="h-fit w-fit p-1 rounded-full"
-                    >
-                      <Check className="w-4 h-4" />
-                    </Button>
-                  </div>
-                )}
-              </DialogContent>
-            </Dialog>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      <div className="flex gap-1 max-sm:w-full">
-        <Button className="max-sm:w-full" onClick={testClipboard}>
-          {clipboardTestState === "success" && (
-            <div>
-              <ClipboardCheck className="text-green-500 inline mr-1 w-4 h-4" />{" "}
-              Буфер обмена работает
-            </div>
-          )}
-          {clipboardTestState === "error" && (
-            <div>
-              <ClipboardX className="text-red-500 inline mr-1 w-4 h-4" /> Буфер
-              обмена не работает
-            </div>
-          )}
-          {clipboardTestState === "idle" && (
-            <div>
-              <Clipboard className="inline mr-1 w-4 h-4" /> Тест буфера обмена
-            </div>
-          )}
-        </Button>
+    <>
+      <div className="p-5 flex gap-1 flex-wrap">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="icon" className="rounded-full">
-              ?
+            <Button className="max-sm:w-full" onClick={exportFunc}>
+              Экспорт
             </Button>
           </PopoverTrigger>
-          <PopoverContent>
-            <p>
-              Сначала скопируется текст &quot;test&quot; в буфер обмена, затем
-              проверится получение текста из буфера (браузер может запросить
-              чтение)
-            </p>
+          <PopoverContent className="max-sm:w-screen">
+            <div className="flex flex-col gap-1">
+              {exportUrl && (
+                <a href={exportUrl} download="export.json" className="w-full">
+                  <Button className="w-full">Скачать</Button>
+                </a>
+              )}
+              {exportBlobUrl && (
+                <a
+                  href={exportBlobUrl}
+                  download="export.json"
+                  className="w-full"
+                >
+                  <Button className="w-full">Скачать 2</Button>
+                </a>
+              )}
+              <Button onClick={exportToClipboard}>
+                <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
+              </Button>
+              <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={saveToFileIo} disabled={importLoading}>
+                    {importLoading ? (
+                      <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                    ) : (
+                      <ArrowDownUp className="inline mr-1 w-4 h-4" />
+                    )}
+                    Сохранить
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Сохранить</DialogTitle>
+                  </DialogHeader>
+                  {importLoading ? (
+                    <div className="flex gap-1 items-center justify-center h-80">
+                      <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <div className="flex gap-1 flex-col items-center">
+                      <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
+                        <span>{fileId}</span>
+                        <Button
+                          onClick={() => copyToClipboard(fileId)}
+                          className="p-1 ml-0.5 h-fit"
+                          variant="outline"
+                        >
+                          <Copy className="inline w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p>Эта ссылка будет активной ещё полчаса.</p>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </div>
           </PopoverContent>
         </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="max-sm:w-full">Импорт</Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <div className="flex flex-col gap-1">
+              <Button onClick={importFunc}>
+                {done ? (
+                  <div>
+                    <FileDown className="inline mr-1 w-4 h-4 text-green-500" />{" "}
+                    Импорт из файла завершен
+                  </div>
+                ) : (
+                  <div>
+                    <Files className="inline mr-1 w-4 h-4" /> Импорт из файла
+                  </div>
+                )}
+              </Button>
+              <Button onClick={importFromClipboard}>
+                {clipboardDone ? (
+                  <div>
+                    <ClipboardCheck className="inline mr-1 w-4 h-4 text-green-500" />{" "}
+                    Импорт из буфера обмена завершен
+                  </div>
+                ) : (
+                  <div>
+                    <ClipboardPaste className="inline mr-1 w-4 h-4" /> Импорт из
+                    буфера обмена
+                  </div>
+                )}
+              </Button>
+              <Dialog open={importModalOpen} onOpenChange={setImportModalOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <ArrowDownUp className="inline mr-1 w-4 h-4" /> Импорт с
+                    сервера
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Импорт с сервера</DialogTitle>
+                    <DialogDescription>
+                      Импортируйте данные из сервера
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Input
+                    placeholder="Имя файла"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
+                  />
+                  <Button
+                    disabled={!fileName || importLoading}
+                    className="w-full"
+                    onClick={importFromFileIo}
+                  >
+                    {importLoading && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Импорт
+                  </Button>
+                  {importError && (
+                    <div className="text-red-500">{importError}</div>
+                  )}
+                  {importedData && (
+                    <div className="flex gap-1 items-center justify-center">
+                      <div>
+                        <span>{importedData?.languages?.length}</span>
+                        <BookA className="inline ml-1 w-4 h-4" />
+                      </div>
+                      <div>
+                        <span>{importedData?.pairs?.length}</span>
+                        <List className="inline ml-1 w-4 h-4" />
+                      </div>
+                      <div>
+                        <span>{importedData?.words?.length}</span>
+                        <ScrollText className="inline ml-1 w-4 h-4" />
+                      </div>
+                      <Button
+                        onClick={() => {
+                          importFromJson(importedData);
+                          setImportModalOpen(false);
+                          setImportedData(null);
+                        }}
+                        size="icon"
+                        className="h-fit w-fit p-1 rounded-full"
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <div className="flex gap-1 max-sm:w-full">
+          <Button className="max-sm:w-full" onClick={testClipboard}>
+            {clipboardTestState === "success" && (
+              <div>
+                <ClipboardCheck className="text-green-500 inline mr-1 w-4 h-4" />{" "}
+                Буфер обмена работает
+              </div>
+            )}
+            {clipboardTestState === "error" && (
+              <div>
+                <ClipboardX className="text-red-500 inline mr-1 w-4 h-4" />{" "}
+                Буфер обмена не работает
+              </div>
+            )}
+            {clipboardTestState === "idle" && (
+              <div>
+                <Clipboard className="inline mr-1 w-4 h-4" /> Тест буфера обмена
+              </div>
+            )}
+          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="rounded-full">
+                ?
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <p>
+                Сначала скопируется текст &quot;test&quot; в буфер обмена, затем
+                проверится получение текста из буфера (браузер может запросить
+                чтение)
+              </p>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
