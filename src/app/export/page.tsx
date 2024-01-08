@@ -133,6 +133,14 @@ export default function Page() {
   }
 
   function copyToClipboard(text: string) {
+    // first variant
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    // second variant
     console.log(text);
     navigator.clipboard.writeText(text).then(() => {
       console.log("Text copied to clipboard");
@@ -197,7 +205,6 @@ export default function Page() {
     //   .then((text) => {
     //     copyToClipboard(text);
     //   });
-    console.log(`https://pixeldrain.com/api/file/export_${randomUUID}.json`);
     fetch(`/export/send_file/`, {
       method: "POST",
       body: new File([JSON.stringify(exportData!)], "export.json"),
@@ -205,11 +212,11 @@ export default function Page() {
         "Content-Type": "multipart/form-data",
       },
     })
-      .then((response) => response.json())
+      .then((response) => response.text())
       .then((text) => {
         console.log(text);
-        copyToClipboard(text.id);
-        setFileId(text.id);
+        copyToClipboard(text);
+        setFileId(text);
         setImportLoading(false);
       });
   }
@@ -269,15 +276,18 @@ export default function Page() {
                     <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
                   </div>
                 ) : (
-                  <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
-                    <span>{fileId}</span>
-                    <Button
-                      onClick={() => copyToClipboard(fileId)}
-                      className="p-1 ml-1 h-fit"
-                      variant="outline"
-                    >
-                      <Copy className="inline w-4 h-4" />
-                    </Button>
+                  <div className="flex gap-1 flex-col items-center">
+                    <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
+                      <span>{fileId}</span>
+                      <Button
+                        onClick={() => copyToClipboard(fileId)}
+                        className="p-1 ml-0.5 h-fit"
+                        variant="outline"
+                      >
+                        <Copy className="inline w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p>Эта ссылка будет активной ещё полчаса.</p>
                   </div>
                 )}
               </DialogContent>
