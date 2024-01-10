@@ -20,6 +20,7 @@ import {
   CalendarRange,
   Check,
   ChevronDown,
+  Download,
   Loader2,
   RotateCw,
   Save,
@@ -45,6 +46,7 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import AudioController from "@/components/audio-controller";
 
 const sorts = [
   {
@@ -90,6 +92,7 @@ export default function Page() {
   const [pairsDelay, setPairsDelay] = React.useState<number>(2);
   const [wordTranslationDelay, setWordTranslationDelay] =
     React.useState<number>(0.5);
+  const [recordingLoading, setRecordingLoading] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (selected1 && selected2) {
@@ -129,11 +132,19 @@ export default function Page() {
       setWords1((prevWords) => prevWords.sort((a, b) => b.id - a.id));
       setWords2((prevWords) => prevWords.sort((a, b) => b.id - a.id));
     } else if (currentSort === "a-z") {
-      setWords1((prevWords) => prevWords.sort((a, b) => b.word.localeCompare(a.word)));
-      setWords2((prevWords) => prevWords.sort((a, b) => b.word.localeCompare(a.word)));
+      setWords1((prevWords) =>
+        prevWords.sort((a, b) => b.word.localeCompare(a.word))
+      );
+      setWords2((prevWords) =>
+        prevWords.sort((a, b) => b.word.localeCompare(a.word))
+      );
     } else if (currentSort === "z-a") {
-      setWords1((prevWords) => prevWords.sort((a, b) => a.word.localeCompare(b.word)));
-      setWords2((prevWords) => prevWords.sort((a, b) => a.word.localeCompare(b.word)));
+      setWords1((prevWords) =>
+        prevWords.sort((a, b) => a.word.localeCompare(b.word))
+      );
+      setWords2((prevWords) =>
+        prevWords.sort((a, b) => a.word.localeCompare(b.word))
+      );
     }
   }, [currentSort]);
 
@@ -193,6 +204,7 @@ export default function Page() {
   }, []);
 
   async function makeRecording() {
+    setRecordingLoading(true);
     let fullyMerged = [];
     for (const w of pairs) {
       const { selected1: word1, selected2: word2 } = w;
@@ -215,6 +227,7 @@ export default function Page() {
       }
     }
     setResultAudioUrl(resultUri);
+    setRecordingLoading(false);
   }
 
   function saveSettings() {
@@ -364,7 +377,7 @@ export default function Page() {
             </div>
           )
         )}
-        <div className="flex gap-1 flex-wrap justify-center">
+        <div className="flex gap-1 flex-wrap justify-center items-center">
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline">Настройки</Button>
@@ -448,13 +461,23 @@ export default function Page() {
                 <RotateCw className="w-5 h-5 mr-1" />
                 Сбросить
               </Button>
-              <Button onClick={makeRecording}>
-                <AudioLines className="w-5 h-5 mr-1" />
+              <Button onClick={makeRecording} disabled={recordingLoading}>
+                {recordingLoading ? (
+                  <Loader2 className="w-5 h-5 mr-1 animate-spin" />
+                ) : (
+                  <AudioLines className="w-5 h-5 mr-1" />
+                )}
                 Создать запись
               </Button>
               {resultAudioUrl && (
                 <>
-                  <AudioPlayback audio={resultAudioUrl} />
+                  {/* <AudioPlayback audio={resultAudioUrl} /> */}
+                  <AudioController src={resultAudioUrl} />
+                  <a href={resultAudioUrl} download>
+                  <Button variant="outline" size="icon">
+                    <Download className="w-4 h-4" />
+                  </Button>
+                  </a>
                   <audio src={resultAudioUrl} controls />
                 </>
               )}

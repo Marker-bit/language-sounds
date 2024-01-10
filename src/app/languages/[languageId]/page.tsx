@@ -10,6 +10,7 @@ import {
   Loader2,
   MoreHorizontal,
   Pencil,
+  Plus,
   Trash2,
 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -64,8 +65,9 @@ export default function Page() {
           <Button
             variant="outline"
             onClick={() => onOpen("addWord", language, null, null)}
+            className="my-2 group"
           >
-            <CopyPlus className="w-4 h-4 mr-2" /> Добавить слово
+            <Plus className="transition-all duration-300 w-4 h-4 mr-2 rotate-0 group-hover:rotate-90" /> Добавить слово
           </Button>
           {words.map((word) => (
             <div key={word.id} className="flex gap-1 flex-row items-center">
