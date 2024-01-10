@@ -13,8 +13,13 @@ import {
 } from "@/components/ui/popover";
 import { cn, getDb } from "@/lib/utils";
 import {
+  ArrowDownAZ,
+  ArrowDownZA,
   AudioLines,
+  CalendarDays,
+  CalendarRange,
   Check,
+  ChevronDown,
   Loader2,
   RotateCw,
   Save,
@@ -27,6 +32,42 @@ import {
 } from "@/lib/audio-silencer";
 
 import type { Deck, Word } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+
+const sorts = [
+  {
+    icon: <ArrowDownAZ className="mr-1 h-4 w-4" />,
+    label: "По алфавиту (А-Я)",
+    value: "a-z",
+  },
+  {
+    icon: <ArrowDownZA className="mr-1 h-4 w-4" />,
+    label: "По алфавиту (Я-А)",
+    value: "z-a",
+  },
+  {
+    icon: <CalendarDays className="mr-1 h-4 w-4" />,
+    label: "По дате создания (сначала новые)",
+    value: "newest",
+  },
+  {
+    icon: <CalendarRange className="mr-1 h-4 w-4" />,
+    label: "По дате создания (сначала старые)",
+    value: "oldest",
+  },
+];
 
 export default function Page() {
   const params = useParams();
@@ -41,6 +82,7 @@ export default function Page() {
   const [pairs, setPairs] = React.useState<any[]>([]);
   const [resultAudioUrl, setResultAudioUrl] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [currentSort, setCurrentSort] = React.useState<string>("oldest");
 
   const [saveDone, setSaveDone] = React.useState<boolean>(false);
 
@@ -78,6 +120,22 @@ export default function Page() {
     setSelected1(null);
     setSelected2(null);
   }
+
+  React.useEffect(() => {
+    if (currentSort === "newest") {
+      setWords1((prevWords) => prevWords.sort((a, b) => a.id - b.id));
+      setWords2((prevWords) => prevWords.sort((a, b) => a.id - b.id));
+    } else if (currentSort === "oldest") {
+      setWords1((prevWords) => prevWords.sort((a, b) => b.id - a.id));
+      setWords2((prevWords) => prevWords.sort((a, b) => b.id - a.id));
+    } else if (currentSort === "a-z") {
+      setWords1((prevWords) => prevWords.sort((a, b) => b.word.localeCompare(a.word)));
+      setWords2((prevWords) => prevWords.sort((a, b) => b.word.localeCompare(a.word)));
+    } else if (currentSort === "z-a") {
+      setWords1((prevWords) => prevWords.sort((a, b) => a.word.localeCompare(b.word)));
+      setWords2((prevWords) => prevWords.sort((a, b) => a.word.localeCompare(b.word)));
+    }
+  }, [currentSort]);
 
   function savePairs() {
     setSaveDone(false);
@@ -210,6 +268,34 @@ export default function Page() {
   return (
     <div className="p-2">
       <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
+      <DropdownMenu>
+        <div className="flex items-center justify-center">
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <span className="mr-2">Сортировка:</span>
+              {sorts.find((s) => s.value === currentSort)?.icon}
+              {sorts.find((s) => s.value === currentSort)?.label}
+              <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+        </div>
+        <DropdownMenuContent>
+          {sorts.map((l) => (
+            <DropdownMenuItem
+              key={l.value}
+              onClick={() => setCurrentSort(l.value)}
+            >
+              {currentSort === l.value ? (
+                <Check className="mr-1 h-4 w-4" />
+              ) : (
+                l.icon
+              )}
+              {l.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <div className="grid grid-cols-2 min-h-full">
         <div className="flex flex-col gap-1 items-center">
           <p>{deck?.fromLanguage?.title}</p>
