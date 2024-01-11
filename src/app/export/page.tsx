@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
@@ -15,28 +16,41 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { getDb } from "@/lib/utils";
+import { cn, getDb } from "@/lib/utils";
 import { randomUUID } from "crypto";
 import {
+  ArrowDownToLine,
   ArrowDownUp,
   BookA,
   Check,
   Clipboard,
   ClipboardCheck,
+  ClipboardCopy,
   ClipboardPaste,
+  ClipboardType,
   ClipboardX,
   Copy,
+  Download,
   FileDown,
   Files,
   Link,
   List,
   Loader2,
+  RotateCw,
   ScrollText,
+  UploadCloud,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import ConfettiExplosion from "react-confetti-explosion";
 import { NextConfetti } from "@/components/ui/confetti";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const [done, setDone] = useState(false);
@@ -54,7 +68,10 @@ export default function Page() {
   const [importedData, setImportedData] = useState<any | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false);
+  const router = useRouter();
+  const [currentTab, setCurrentTab] = useState<string>("download");
   function exportFunc() {
+    console.log("exporting...");
     getDb((db) => {
       const tx = db.transaction("words", "readonly");
       const store = tx.objectStore("words");
@@ -158,6 +175,13 @@ export default function Page() {
     });
   }
 
+  function downloadFile(url: string, fileName: string) {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link).click();
+  }
+
   function exportToClipboard() {
     navigator.clipboard
       .writeText(JSON.stringify(exportData!))
@@ -240,7 +264,8 @@ export default function Page() {
         // copyToClipboard(data.key);
         // setFileId(data.key);
         console.log(text);
-        const key = text.split("/").pop();
+        // const key = text.split("/").pop();
+        const key = text;
         copyToClipboard(key!);
         setFileId(key!);
         setImportLoading(false);
@@ -268,7 +293,92 @@ export default function Page() {
   return (
     <>
       <div className="p-5 flex gap-1 flex-wrap">
-        <Popover>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button onClick={exportFunc}>Экспорт</Button>
+          </DialogTrigger>
+          <DialogContent className="max-sm:w-screen max-sm:h-screen">
+            <div className="flex gap-1 flex-wrap">
+              <div className={cn(
+                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                currentTab === "download" && "border-zinc-900"
+              )} onClick={() => setCurrentTab("download")}>
+                Скачать файл
+              </div>
+              <div className={cn(
+                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                currentTab === "copy" && "border-zinc-900"
+              )} onClick={() => setCurrentTab("copy")}>
+                Копировать
+              </div>
+              <div className={cn(
+                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                currentTab === "server" && "border-zinc-900"
+              )} onClick={() => setCurrentTab("server")}>
+                Сохранить на сервере
+              </div>
+            </div>
+            {currentTab === "download" ? (
+              <div className="flex items-center justify-center flex-col gap-1 min-h-52">
+                <Button
+                  onClick={() => downloadFile(exportBlobUrl!, "export.json")}
+                >
+                  <Download className="inline mr-1 w-4 h-4" /> Одноразовая
+                  ссылка
+                </Button>
+                <Button onClick={() => downloadFile(exportUrl!, "export.json")}>
+                  <ArrowDownToLine className="inline mr-1 w-4 h-4" /> Длинная
+                  ссылка
+                </Button>
+              </div>
+            ) : currentTab === "copy" ? (
+              <div className="flex items-center justify-center flex-col gap-1 min-h-52">
+                <Button onClick={exportToClipboard}>
+                  <ClipboardCopy className="inline mr-1 w-4 h-4" /> Копировать
+                  данные
+                </Button>
+                <Button onClick={() => copyToClipboard(exportUrl!)}>
+                  <ClipboardType className="inline mr-1 w-4 h-4" /> Копировать
+                  длинную ссылку
+                </Button>
+              </div>
+            ) : (
+              currentTab === "server" && (
+                <div className="flex items-center justify-center flex-col gap-1 min-h-52">
+                  <Button disabled={importLoading} onClick={saveToFileIo}>
+                    {fileId ? (
+                      <RotateCw className={cn(
+                        "inline mr-2 w-4 h-4",
+                        importLoading && "animate-spin"
+                      )} />
+                    ) : importLoading ? (
+                      <Loader2 className="inline mr-2 w-4 h-4 animate-spin" />
+                    ) : (
+                      <UploadCloud className="inline mr-2 w-4 h-4" />
+                    )}
+                    {fileId ? "Новая ссылка" : importLoading ? "Идет загрузка..." : "Загрузить файл"}
+                  </Button>
+                  {fileId && (
+                      <>
+                        <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
+                          <span>{fileId}</span>
+                          <Button
+                            onClick={() => copyToClipboard(fileId)}
+                            className="p-1 ml-0.5 h-fit"
+                            variant="outline"
+                          >
+                            <Copy className="inline w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p>Эта ссылка будет активной ещё полчаса.</p>
+                      </>
+                    )}
+                </div>
+              )
+            )}
+          </DialogContent>
+        </Dialog>
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button className="max-sm:w-full" onClick={exportFunc}>
               Экспорт
@@ -293,7 +403,10 @@ export default function Page() {
               <Button onClick={exportToClipboard}>
                 <Clipboard className="inline mr-1 w-4 h-4" /> Копировать данные
               </Button>
-              <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+              <Dialog
+                open={exportDialogOpen}
+                onOpenChange={setExportDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button onClick={saveToFileIo} disabled={importLoading}>
                     {importLoading ? (
@@ -331,7 +444,7 @@ export default function Page() {
               </Dialog>
             </div>
           </PopoverContent>
-        </Popover>
+        </Popover> */}
 
         <Popover>
           <PopoverTrigger asChild>

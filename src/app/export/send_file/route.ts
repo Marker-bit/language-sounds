@@ -4,19 +4,20 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   const file = await req.text();
   // console.log(file);
-  // let randomUUID = Math.random().toString(36).slice(10);
-  // const reqq = await fetch(
-  //   `https://pixeldrain.com/api/file/${randomUUID}?anonymous=true`,
-  //   {
-  //     method: "PUT",
-  //     body: file,
-  //     headers: {
-  //       'Content-Type': 'text/plain',
-  //     },
-  //   }
-  // );
-  // const data = await reqq.json();
-  // return NextResponse.json({ id: data.id });
+  let randomUUID = Math.random().toString(36).slice(10);
+  const reqq = await fetch(
+    `https://pixeldrain.com/api/file/${randomUUID}?anonymous=true`,
+    {
+      method: "PUT",
+      body: file,
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    }
+  );
+  const id = (await reqq.json()).id;
+  const url = `https://pixeldrain.com/api/file/${id}`;
+  return new NextResponse(url);
 
   // const expires = new Date().getTime() + 30 * 60 * 1000;
   // const form = new FormData();
@@ -31,21 +32,21 @@ export async function POST(req: Request) {
   // console.log(text);
   // return new NextResponse(text);
 
-  const apiUrl = "https://file.io";
-  const expires = new Date();
-  expires.setTime(expires.getTime() + 30 * 60 * 1000);
-  const form = new FormData();
-  form.append("file", file);
-  form.append("expires", expires.toISOString());
-  const resp = await axios.default
-    .post(apiUrl, form, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      }
-    });
-  const text = resp.data;
-  console.log(text);
-  return NextResponse.json(text);
+  // const apiUrl = "https://file.io";
+  // const expires = new Date();
+  // expires.setTime(expires.getTime() + 30 * 60 * 1000);
+  // const form = new FormData();
+  // form.append("file", file);
+  // form.append("expires", expires.toISOString());
+  // const resp = await axios.default
+  //   .post(apiUrl, form, {
+  //     headers: {
+  //       'Content-Type': 'multipart/form-data',
+  //     }
+  //   });
+  // const text = resp.data;
+  // console.log(text);
+  // return NextResponse.json(text);
 
   // Make POST request to API endpoint
   // fetch(apiUrl, {
