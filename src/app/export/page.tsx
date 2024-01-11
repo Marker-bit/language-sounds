@@ -106,7 +106,20 @@ export default function Page() {
           const store = tx.objectStore("pairs");
 
           store.getAll().onsuccess = (event: any) => {
-            const pairs = event.target.result;
+            let pairs = event.target.result;
+            console.log("p", pairs);
+            pairs = pairs.map((deck: any) => {
+              deck.pairs = deck.pairs.map((pair: any) => {
+                pair.selected1 = {
+                  id: pair.selected1.id,
+                };
+                pair.selected2 = {
+                  id: pair.selected2.id,
+                };
+                return pair;
+              });
+              return deck;
+            });
             const jsonData = {
               words,
               languages,
@@ -136,22 +149,34 @@ export default function Page() {
     return new Promise((resolve, reject) => {
       getDb((db) => {
         let tx = db.transaction("languages", "readwrite");
-        let store = tx.objectStore("languages");
-        store.clear();
+        let languagesStore = tx.objectStore("languages");
+        languagesStore.clear();
         for (const language of data.languages) {
-          store.add(language);
+          languagesStore.add(language);
         }
         tx = db.transaction("words", "readwrite");
-        store = tx.objectStore("words");
-        store.clear();
+        let wordsStore = tx.objectStore("words");
+        wordsStore.clear();
         for (const word of data.words) {
-          store.add(word);
+          wordsStore.add(word);
         }
         tx = db.transaction("pairs", "readwrite");
-        store = tx.objectStore("pairs");
-        store.clear();
-        for (const pair of data.pairs) {
-          store.add(pair);
+        let pairsStore = tx.objectStore("pairs");
+        pairsStore.clear();
+        for (let deck of data.pairs) {
+          deck.pairs = deck.pairs.map((pair: any) => {
+            const wordSelected1 = data.words.find(
+              (w: any) => w.id === pair.selected1.id
+            );
+            pair.selected1 = wordSelected1;
+            const wordSelected2 = data.words.find(
+              (w: any) => w.id === pair.selected2.id
+            );
+            pair.selected2 = wordSelected2;
+            return pair;
+          });
+
+          pairsStore.add(deck);
         }
         resolve();
       });

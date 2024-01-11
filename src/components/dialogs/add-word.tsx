@@ -107,9 +107,8 @@ export const AddWordModal = () => {
     setRecordingTime(0);
     //create new Media recorder instance using the stream
     const media = new MediaRecorder(stream, {
-      mimeType: "audio/webm",
-      // audioBitsPerSecond: 128,
-      // bitsPerSecond: 128,
+      mimeType: 'audio/webm;codecs=opus',
+      audioBitsPerSecond: 16000 // 16kbps
     });
     //set the MediaRecorder instance to the mediaRecorder ref
     mediaRecorder.current = media;
@@ -153,7 +152,7 @@ export const AddWordModal = () => {
     mediaRecorder.current.stop();
     mediaRecorder.current.onstop = () => {
       //creates a blob file from the audiochunks data
-      const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm;codecs=opus" });
       let reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       //creates a playable URL from the blob file.
