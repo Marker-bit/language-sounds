@@ -42,19 +42,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import ConfettiExplosion from "react-confetti-explosion";
-import { NextConfetti } from "@/components/ui/confetti";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
-import YandexLogin from "@/components/oauth/YandexLogin";
-import YandexLogin2 from "@/components/oauth/YandexLogin2";
-
-const clientId = "9edc9366c5b44134b55ef19abb8e9342";
 
 export default function Page() {
   const [done, setDone] = useState(false);
