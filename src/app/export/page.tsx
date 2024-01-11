@@ -40,7 +40,7 @@ import {
   ScrollText,
   UploadCloud,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import ConfettiExplosion from "react-confetti-explosion";
 import { NextConfetti } from "@/components/ui/confetti";
@@ -51,6 +51,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import YandexLogin from "@/components/oauth/YandexLogin";
+import YandexLogin2 from "@/components/oauth/YandexLogin2";
+
+const clientId = "9edc9366c5b44134b55ef19abb8e9342";
 
 export default function Page() {
   const [done, setDone] = useState(false);
@@ -70,6 +74,33 @@ export default function Page() {
   const [exportDialogOpen, setExportDialogOpen] = useState<boolean>(false);
   const router = useRouter();
   const [currentTab, setCurrentTab] = useState<string>("download");
+  const [authData, setAuthData] = useState<{
+    access_token?: string | null;
+    expires_in?: string | null;
+  }>({});
+  const [accountData, setAccountData] = useState<{
+    login?: string | null;
+  }>({});
+
+  useEffect(() => {
+    setAuthData({
+      access_token: window.localStorage.getItem("yandexToken"),
+      expires_in: window.localStorage.getItem("yandexTokenExpires"),
+    });
+    function updateAccountData(access_token: string) {
+      fetch("https://login.yandex.ru/info", {
+        headers: {
+          Authorization: `OAuth ${access_token}`,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          setAccountData(data);
+        });
+    }
+    updateAccountData(window.localStorage.getItem("yandexToken")!);
+  }, []);
   function exportFunc() {
     console.log("exporting...");
     getDb((db) => {
@@ -290,6 +321,31 @@ export default function Page() {
         setImportLoading(false);
       });
   }
+
+  function uploadToYaDisk() {
+    setImportLoading(true);
+    fetch(`https://cloud-api.yandex.net/v1/disk/resources/upload?path=${fileName}`, {
+      headers: {
+        "Authorization": `OAuth ${authData.access_token}`,
+      }
+    }).then(resp => resp.json()).then(data => {
+      console.log(data);
+      if (data.error) {
+        toast.error(data.message);
+        setImportLoading(false);
+        return;
+      }
+      const loadingId = toast.loading("Загружаем...");
+      fetch(data.href, {
+        method: "PUT",
+        body: JSON.stringify(exportData),
+      }).then(response => response.text()).then(text => {
+        setImportLoading(false);
+        toast.dismiss(loadingId);
+        toast.success("Загружено!");
+      });
+    })
+  }
   return (
     <>
       <div className="p-5 flex gap-1 flex-wrap">
@@ -299,23 +355,41 @@ export default function Page() {
           </DialogTrigger>
           <DialogContent className="max-sm:w-screen max-sm:h-screen">
             <div className="flex gap-1 flex-wrap">
-              <div className={cn(
-                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
-                currentTab === "download" && "border-zinc-900"
-              )} onClick={() => setCurrentTab("download")}>
+              <div
+                className={cn(
+                  "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                  currentTab === "download" && "border-zinc-900"
+                )}
+                onClick={() => setCurrentTab("download")}
+              >
                 Скачать файл
               </div>
-              <div className={cn(
-                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
-                currentTab === "copy" && "border-zinc-900"
-              )} onClick={() => setCurrentTab("copy")}>
+              <div
+                className={cn(
+                  "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                  currentTab === "copy" && "border-zinc-900"
+                )}
+                onClick={() => setCurrentTab("copy")}
+              >
                 Копировать
               </div>
-              <div className={cn(
-                "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
-                currentTab === "server" && "border-zinc-900"
-              )} onClick={() => setCurrentTab("server")}>
+              <div
+                className={cn(
+                  "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                  currentTab === "server" && "border-zinc-900"
+                )}
+                onClick={() => setCurrentTab("server")}
+              >
                 Сохранить на сервере
+              </div>
+              <div
+                className={cn(
+                  "p-1 pb-0 border-b-2 border-transparent hover:border-zinc-900 cursor-pointer transition-all",
+                  currentTab === "yadisk" && "border-zinc-900"
+                )}
+                onClick={() => setCurrentTab("yadisk")}
+              >
+                Яндекс.Диск
               </div>
             </div>
             {currentTab === "download" ? (
@@ -342,37 +416,56 @@ export default function Page() {
                   длинную ссылку
                 </Button>
               </div>
-            ) : (
-              currentTab === "server" && (
-                <div className="flex items-center justify-center flex-col gap-1 min-h-52">
-                  <Button disabled={importLoading} onClick={saveToFileIo}>
-                    {fileId ? (
-                      <RotateCw className={cn(
+            ) : currentTab === "server" ? (
+              <div className="flex items-center justify-center flex-col gap-1 min-h-52">
+                <Button disabled={importLoading} onClick={saveToFileIo}>
+                  {fileId ? (
+                    <RotateCw
+                      className={cn(
                         "inline mr-2 w-4 h-4",
                         importLoading && "animate-spin"
-                      )} />
-                    ) : importLoading ? (
+                      )}
+                    />
+                  ) : importLoading ? (
+                    <Loader2 className="inline mr-2 w-4 h-4 animate-spin" />
+                  ) : (
+                    <UploadCloud className="inline mr-2 w-4 h-4" />
+                  )}
+                  {fileId
+                    ? "Новая ссылка"
+                    : importLoading
+                    ? "Идет загрузка..."
+                    : "Загрузить файл"}
+                </Button>
+                {fileId && (
+                  <>
+                    <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
+                      <span>{fileId}</span>
+                      <Button
+                        onClick={() => copyToClipboard(fileId)}
+                        className="p-1 ml-0.5 h-fit"
+                        variant="outline"
+                      >
+                        <Copy className="inline w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p>Эта ссылка будет активной ещё полчаса.</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              currentTab === "yadisk" && (
+                <div>
+                  <p>Аккаунт: {accountData?.login}</p>
+                  <Input placeholder="Название файла" value={fileName} onChange={(e) => setFileName(e.target.value)} />
+                  <Button disabled={importLoading} className="mt-2" onClick={uploadToYaDisk}>
+                    {importLoading ? (
                       <Loader2 className="inline mr-2 w-4 h-4 animate-spin" />
                     ) : (
                       <UploadCloud className="inline mr-2 w-4 h-4" />
                     )}
-                    {fileId ? "Новая ссылка" : importLoading ? "Идет загрузка..." : "Загрузить файл"}
+                    Загрузить
                   </Button>
-                  {fileId && (
-                      <>
-                        <div className="flex gap-1 p-1 w-fit border border-zinc-200 rounded items-center">
-                          <span>{fileId}</span>
-                          <Button
-                            onClick={() => copyToClipboard(fileId)}
-                            className="p-1 ml-0.5 h-fit"
-                            variant="outline"
-                          >
-                            <Copy className="inline w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p>Эта ссылка будет активной ещё полчаса.</p>
-                      </>
-                    )}
                 </div>
               )
             )}

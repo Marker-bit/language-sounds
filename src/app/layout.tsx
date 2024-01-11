@@ -17,8 +17,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   return (
     <html lang="en">
+      <head>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+      </head>
       <body className={inter.className}>
         {/* <div className="flex flex-col min-h-screen justify-center items-center"> */}
         <ModalProvider />
