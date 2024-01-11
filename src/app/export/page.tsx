@@ -99,7 +99,7 @@ export default function Page() {
         const words = event.target.result;
         const tx = db.transaction("languages", "readonly");
         const store = tx.objectStore("languages");
-
+        
         store.getAll().onsuccess = (event: any) => {
           const languages = event.target.result;
           const tx = db.transaction("pairs", "readonly");

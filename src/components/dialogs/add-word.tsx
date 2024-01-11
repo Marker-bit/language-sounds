@@ -158,15 +158,6 @@ export const AddWordModal = () => {
       //creates a playable URL from the blob file.
       reader.onload = function () {
         setAudio(reader.result as string);
-        const compressedReadableStream = audioBlob.stream().pipeThrough(
-          new CompressionStream("gzip"),
-        );
-        compressedReadableStream.getReader().read().then(({ done, value }) => {
-          if (done) {
-            console.log("done");
-            console.log(value);
-          }
-        })
       };
 
       // const audioUrl = URL.createObjectURL(audioBlob);
