@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 const clientId = "9edc9366c5b44134b55ef19abb8e9342";
 const Page = () => {
+  const [host, setHost] = useState<string>("");
   const [authData, setAuthData] = useState<{
     access_token?: string | null;
     expires_in?: string | null;
@@ -16,6 +17,7 @@ const Page = () => {
     default_email?: string | null;
   }>({});
   useEffect(() => {
+    setHost(window.location.host);
     const expires = window.localStorage.getItem("yandexTokenExpires");
     if (expires) {
       if (new Date() > new Date(expires)) {
@@ -91,7 +93,7 @@ const Page = () => {
       ) : (
         <YandexLogin2
           clientID={clientId}
-          redirectUrl={`http://${window.location.hostname}/yadisk`}
+          redirectUrl={`http://${host}/yadisk`}
         >
           <Button>Войти</Button>
         </YandexLogin2>
