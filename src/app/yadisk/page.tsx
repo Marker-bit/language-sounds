@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 const clientId = "9edc9366c5b44134b55ef19abb8e9342";
 const Page = () => {
+  const host = window.location.hostname;
   const [authData, setAuthData] = useState<{
     access_token?: string | null;
     expires_in?: string | null;
@@ -91,7 +92,7 @@ const Page = () => {
       ) : (
         <YandexLogin2
           clientID={clientId}
-          redirectUrl="http://localhost:3000/yadisk"
+          redirectUrl={`http://${host}/yadisk`}
         >
           <Button>Войти</Button>
         </YandexLogin2>

@@ -84,6 +84,12 @@ export const AddWordModal = () => {
           audio: true,
           video: false,
         });
+        const constraint = {
+          sampleRate: {
+            exact: 1
+          }
+        }
+        // streamData.getAudioTracks().forEach((track) => track.applyConstraints(constraint));
         setPermission(true);
         setStream(streamData);
       } catch (err: any) {
@@ -100,7 +106,11 @@ export const AddWordModal = () => {
     setRecordingStatus("recording");
     setRecordingTime(0);
     //create new Media recorder instance using the stream
-    const media = new MediaRecorder(stream, { mimeType: "audio/webm" });
+    const media = new MediaRecorder(stream, {
+      mimeType: "audio/webm",
+      // audioBitsPerSecond: 128,
+      // bitsPerSecond: 128,
+    });
     //set the MediaRecorder instance to the mediaRecorder ref
     mediaRecorder.current = media;
     //invokes the start method to start the recording process
@@ -143,12 +153,21 @@ export const AddWordModal = () => {
     mediaRecorder.current.stop();
     mediaRecorder.current.onstop = () => {
       //creates a blob file from the audiochunks data
-      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+      const audioBlob = new Blob(audioChunks, { type: "audio/mp3" });
       let reader = new FileReader();
       reader.readAsDataURL(audioBlob);
       //creates a playable URL from the blob file.
       reader.onload = function () {
         setAudio(reader.result as string);
+        const compressedReadableStream = audioBlob.stream().pipeThrough(
+          new CompressionStream("gzip"),
+        );
+        compressedReadableStream.getReader().read().then(({ done, value }) => {
+          if (done) {
+            console.log("done");
+            console.log(value);
+          }
+        })
       };
 
       // const audioUrl = URL.createObjectURL(audioBlob);
