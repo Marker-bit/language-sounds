@@ -49,6 +49,12 @@ import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import AudioController from "@/components/audio-controller";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const sorts = [
   {
@@ -219,7 +225,7 @@ export default function Page() {
     }
     for (const w of pairs) {
       const { selected1: word1, selected2: word2, checked } = w;
-      if (checked === false) return;
+      if (checked === true) return;
       const newDataUri = await addSilenceToAudioDataUri(
         swap ? word2.audio : word1.audio,
         wordTranslationDelay
@@ -386,25 +392,34 @@ export default function Page() {
               key={selected1.id}
               className="border border-zinc-200 rounded-md p-2 flex gap-1 items-center"
             >
-              <Checkbox
-                checked={checked}
-                onCheckedChange={() => {
-                  setPairs((pairs) =>
-                    pairs.map((p) => {
-                      if (
-                        p.selected1 === selected1 &&
-                        p.selected2 === selected2
-                      ) {
-                        return {
-                          ...p,
-                          checked: !p.checked,
-                        };
-                      }
-                      return p;
-                    })
-                  );
-                }}
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => {
+                        setPairs((pairs) =>
+                          pairs.map((p) => {
+                            if (
+                              p.selected1 === selected1 &&
+                              p.selected2 === selected2
+                            ) {
+                              return {
+                                ...p,
+                                checked: !p.checked,
+                              };
+                            }
+                            return p;
+                          })
+                        );
+                      }}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Выучено?</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <AudioPlayback audio={selected1.audio!} />
               <span>{selected1.word}</span> —
               <AudioPlayback audio={selected2.audio!} />
@@ -536,7 +551,13 @@ export default function Page() {
                 <RotateCw className="w-5 h-5 mr-1" />
                 Сбросить
               </Button>
-              <Button onClick={makeRecording} disabled={recordingLoading || pairs.filter((w) => w.checked !== false).length == 0}>
+              <Button
+                onClick={makeRecording}
+                disabled={
+                  recordingLoading ||
+                  pairs.filter((w) => w.checked !== true).length == 0
+                }
+              >
                 {recordingLoading ? (
                   <Loader2 className="w-5 h-5 mr-1 animate-spin" />
                 ) : (
