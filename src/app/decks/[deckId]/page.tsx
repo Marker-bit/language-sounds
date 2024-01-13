@@ -20,11 +20,15 @@ import {
   CalendarRange,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   Download,
   Loader2,
+  Plus,
   RotateCw,
   Save,
+  Search,
   XIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -57,6 +61,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { record } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import AddPair from "./AddPair";
 
 const sorts = [
   {
@@ -233,9 +245,9 @@ export default function Page() {
       const { selected1: word1, selected2: word2, checked } = w;
       i++;
       if (checked === true) {
-        setRecordedDone(i / pairs.length * 50);
+        setRecordedDone((i / pairs.length) * 50);
         continue;
-      };
+      }
       const newDataUri = await addSilenceToAudioDataUri(
         swap ? word2.audio : word1.audio,
         wordTranslationDelay
@@ -245,7 +257,7 @@ export default function Page() {
         pairsDelay
       );
       fullyMerged.push(newDataUri, newDataUri2);
-      setRecordedDone(i / pairs.length * 50);
+      setRecordedDone((i / pairs.length) * 50);
     }
     setRecordedDone(0);
     let resultUri = "";
@@ -257,7 +269,7 @@ export default function Page() {
         resultUri = await concatenateAudioDataUris(resultUri, uri);
       }
       i++;
-      setRecordedDone(50 + (i / fullyMerged.length * 50));
+      setRecordedDone(50 + (i / fullyMerged.length) * 50);
     }
     setResultAudioUrl(resultUri);
     setRecordingLoading(false);
@@ -393,6 +405,20 @@ export default function Page() {
         </div>
       </div>
       <div className="flex flex-col gap-1 items-center mt-3">
+        <AddPair
+          words={words1}
+          words2={words2}
+          doneFunc={(selected1: number, selected2: number) => {
+            setPairs((pairs) => [
+              ...pairs,
+              {
+                selected1: words1.find((w) => w.id === selected1),
+                selected2: words2.find((w) => w.id === selected2),
+                checked: false,
+              },
+            ]);
+          }}
+        />
         {pairs.map(
           ({
             selected1,
@@ -404,12 +430,12 @@ export default function Page() {
             checked: boolean;
           }) => (
             <div
-              key={selected1.id}
+              key={`${selected1.id}-${selected2.id}`}
               className="border border-zinc-200 rounded-md p-2 flex gap-1 items-center"
             >
               <TooltipProvider>
                 <Tooltip>
-                  <TooltipTrigger>
+                  <TooltipTrigger asChild>
                     <Checkbox
                       checked={checked}
                       onCheckedChange={() => {
@@ -580,7 +606,10 @@ export default function Page() {
                 )}
                 Создать запись
                 {recordingLoading && (
-                  <span className="ml-1 flex items-center">(<Clock className="w-4 h-4 mr-1 inline" />{recordedDone.toFixed(1)}%)</span>
+                  <span className="ml-1 flex items-center">
+                    (<Clock className="w-4 h-4 mr-1 inline" />
+                    {recordedDone.toFixed(1)}%)
+                  </span>
                 )}
               </Button>
               {resultAudioUrl && (
