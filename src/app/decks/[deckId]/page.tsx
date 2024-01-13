@@ -20,6 +20,7 @@ import {
   CalendarRange,
   Check,
   ChevronDown,
+  Clock,
   Download,
   Loader2,
   RotateCw,
@@ -55,6 +56,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { record } from "zod";
 
 const sorts = [
   {
@@ -95,6 +97,8 @@ export default function Page() {
   const [currentSort, setCurrentSort] = React.useState<string>("oldest");
 
   const [saveDone, setSaveDone] = React.useState<boolean>(false);
+
+  const [recordedDone, setRecordedDone] = React.useState<number>(0);
 
   const audioCtx = React.useRef<any>(null);
   const [pairsDelay, setPairsDelay] = React.useState<number>(2);
@@ -216,6 +220,7 @@ export default function Page() {
 
   async function makeRecording() {
     setRecordingLoading(true);
+    setRecordedDone(0);
     let fullyMerged = [];
     let changedPairs;
     if (shuffle) {
@@ -223,9 +228,14 @@ export default function Page() {
     } else {
       changedPairs = [...pairs];
     }
+    let i = 0;
     for (const w of pairs) {
       const { selected1: word1, selected2: word2, checked } = w;
-      if (checked === true) return;
+      i++;
+      if (checked === true) {
+        setRecordedDone(i / pairs.length * 50);
+        continue;
+      };
       const newDataUri = await addSilenceToAudioDataUri(
         swap ? word2.audio : word1.audio,
         wordTranslationDelay
@@ -235,14 +245,19 @@ export default function Page() {
         pairsDelay
       );
       fullyMerged.push(newDataUri, newDataUri2);
+      setRecordedDone(i / pairs.length * 50);
     }
+    setRecordedDone(0);
     let resultUri = "";
+    i = 0;
     for (const uri of fullyMerged) {
       if (!resultUri) {
         resultUri = uri;
       } else {
         resultUri = await concatenateAudioDataUris(resultUri, uri);
       }
+      i++;
+      setRecordedDone(50 + (i / fullyMerged.length * 50));
     }
     setResultAudioUrl(resultUri);
     setRecordingLoading(false);
@@ -420,9 +435,9 @@ export default function Page() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <AudioPlayback audio={selected1.audio!} />
+              {/* <AudioPlayback audio={selected1.audio!} /> */}
               <span>{selected1.word}</span> —
-              <AudioPlayback audio={selected2.audio!} />
+              {/* <AudioPlayback audio={selected2.audio!} /> */}
               <span>{selected2.word}</span>
               <Button
                 variant="outline"
@@ -564,6 +579,9 @@ export default function Page() {
                   <AudioLines className="w-5 h-5 mr-1" />
                 )}
                 Создать запись
+                {recordingLoading && (
+                  <span className="ml-1 flex items-center">(<Clock className="w-4 h-4 mr-1 inline" />{recordedDone.toFixed(1)}%)</span>
+                )}
               </Button>
               {resultAudioUrl && (
                 <>
