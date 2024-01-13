@@ -11,7 +11,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { cn, getDb } from "@/lib/utils";
+import { cn, getDb, shuffleArray } from "@/lib/utils";
 import {
   ArrowDownAZ,
   ArrowDownZA,
@@ -47,6 +47,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import AudioController from "@/components/audio-controller";
+import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const sorts = [
   {
@@ -92,7 +94,10 @@ export default function Page() {
   const [pairsDelay, setPairsDelay] = React.useState<number>(2);
   const [wordTranslationDelay, setWordTranslationDelay] =
     React.useState<number>(0.5);
-  const [recordingLoading, setRecordingLoading] = React.useState<boolean>(false);
+  const [recordingLoading, setRecordingLoading] =
+    React.useState<boolean>(false);
+  const [swap, setSwap] = React.useState<boolean>(false);
+  const [shuffle, setShuffle] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (selected1 && selected2) {
@@ -206,14 +211,21 @@ export default function Page() {
   async function makeRecording() {
     setRecordingLoading(true);
     let fullyMerged = [];
+    let changedPairs;
+    if (shuffle) {
+      changedPairs = shuffleArray([...pairs]);
+    } else {
+      changedPairs = [...pairs];
+    }
     for (const w of pairs) {
-      const { selected1: word1, selected2: word2 } = w;
+      const { selected1: word1, selected2: word2, checked } = w;
+      if (checked === false) return;
       const newDataUri = await addSilenceToAudioDataUri(
-        word1.audio,
+        swap ? word2.audio : word1.audio,
         wordTranslationDelay
       );
       const newDataUri2 = await addSilenceToAudioDataUri(
-        word2.audio,
+        swap ? word1.audio : word2.audio,
         pairsDelay
       );
       fullyMerged.push(newDataUri, newDataUri2);
@@ -236,6 +248,8 @@ export default function Page() {
       JSON.stringify({
         wordTranslationDelay,
         pairsDelay,
+        shuffle,
+        swap,
       })
     );
     setSaveSettingsDone(true);
@@ -250,6 +264,8 @@ export default function Page() {
     const settings = JSON.parse(settingsJson);
     setWordTranslationDelay(settings.wordTranslationDelay);
     setPairsDelay(settings.pairsDelay);
+    setShuffle(settings.shuffle);
+    setSwap(settings.swap);
   }
 
   function removePair({ selected1, selected2 }: any) {
@@ -281,7 +297,7 @@ export default function Page() {
   return (
     <div className="p-2">
       <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
-      <DropdownMenu>
+      {/* <DropdownMenu>
         <div className="flex items-center justify-center">
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
@@ -307,7 +323,7 @@ export default function Page() {
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu> */}
 
       <div className="grid grid-cols-2 min-h-full">
         <div className="flex flex-col gap-1 items-center">
@@ -357,11 +373,38 @@ export default function Page() {
       </div>
       <div className="flex flex-col gap-1 items-center mt-3">
         {pairs.map(
-          ({ selected1, selected2 }: { selected1: Word; selected2: Word }) => (
+          ({
+            selected1,
+            selected2,
+            checked,
+          }: {
+            selected1: Word;
+            selected2: Word;
+            checked: boolean;
+          }) => (
             <div
               key={selected1.id}
               className="border border-zinc-200 rounded-md p-2 flex gap-1 items-center"
             >
+              <Checkbox
+                checked={checked}
+                onCheckedChange={() => {
+                  setPairs((pairs) =>
+                    pairs.map((p) => {
+                      if (
+                        p.selected1 === selected1 &&
+                        p.selected2 === selected2
+                      ) {
+                        return {
+                          ...p,
+                          checked: !p.checked,
+                        };
+                      }
+                      return p;
+                    })
+                  );
+                }}
+              />
               <AudioPlayback audio={selected1.audio!} />
               <span>{selected1.word}</span> —
               <AudioPlayback audio={selected2.audio!} />
@@ -394,7 +437,7 @@ export default function Page() {
                 </div>
                 <div className="grid gap-2">
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="width">Между парами</Label>
+                    <Label>Между парами</Label>
                     <Input
                       id="pairsDelay"
                       type="number"
@@ -410,7 +453,7 @@ export default function Page() {
                     парами] &quot;—&quot; ⏳ &quot;—&quot; [пауза между парами]{" "}
                   </div>
                   <div className="grid grid-cols-3 items-center gap-4">
-                    <Label htmlFor="maxWidth">Между словом и переводом</Label>
+                    <Label>Между словом и переводом</Label>
                     <Input
                       id="wordTranslationDelay"
                       className="col-span-2 h-8"
@@ -420,6 +463,38 @@ export default function Page() {
                         setWordTranslationDelay(Number(e.target.value))
                       }
                     />
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="swap">
+                      Поменять местами слово и перевод?
+                    </Label>
+                    <Switch
+                      id="swap"
+                      checked={swap}
+                      onCheckedChange={setSwap}
+                    />
+                    {/* <Input
+                      id="shuffle"
+                      type="number"
+                      className="col-span-2 h-8"
+                      value={pairsDelay}
+                      onChange={(e) => setPairsDelay(Number(e.target.value))}
+                    /> */}
+                  </div>
+                  <div className="grid grid-cols-3 items-center gap-4">
+                    <Label htmlFor="shuffle">Перемешать?</Label>
+                    <Switch
+                      id="shuffle"
+                      checked={shuffle}
+                      onCheckedChange={setShuffle}
+                    />
+                    {/* <Input
+                      id="shuffle"
+                      type="number"
+                      className="col-span-2 h-8"
+                      value={pairsDelay}
+                      onChange={(e) => setPairsDelay(Number(e.target.value))}
+                    /> */}
                   </div>
                   {saveSettingsDone ? (
                     <Button
@@ -461,7 +536,7 @@ export default function Page() {
                 <RotateCw className="w-5 h-5 mr-1" />
                 Сбросить
               </Button>
-              <Button onClick={makeRecording} disabled={recordingLoading}>
+              <Button onClick={makeRecording} disabled={recordingLoading || pairs.filter((w) => w.checked !== false).length == 0}>
                 {recordingLoading ? (
                   <Loader2 className="w-5 h-5 mr-1 animate-spin" />
                 ) : (
@@ -474,9 +549,9 @@ export default function Page() {
                   {/* <AudioPlayback audio={resultAudioUrl} /> */}
                   <AudioController src={resultAudioUrl} />
                   <a href={resultAudioUrl} download>
-                  <Button variant="outline" size="icon">
-                    <Download className="w-4 h-4" />
-                  </Button>
+                    <Button variant="outline" size="icon">
+                      <Download className="w-4 h-4" />
+                    </Button>
                   </a>
                   <audio src={resultAudioUrl} controls />
                 </>
