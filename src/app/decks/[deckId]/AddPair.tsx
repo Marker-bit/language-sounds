@@ -19,10 +19,14 @@ const AddPair = ({
   words,
   words2,
   doneFunc,
+  open,
+  setOpen,
 }: {
   words: Word[];
   words2: Word[];
   doneFunc: (selected1: number, selected2: number) => any;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }) => {
   const [search, setSearch] = useState("");
   const [checked1, setChecked1] = useState<number | null>(null);
@@ -36,13 +40,13 @@ const AddPair = ({
     return;
   }
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-20">
           <Plus className="w-5 h-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-sm:h-full">
         <DialogHeader>
           <DialogTitle>Добавить пару</DialogTitle>
         </DialogHeader>
@@ -83,6 +87,7 @@ const AddPair = ({
           <ScrollArea className="flex flex-col h-[50vh]">
             {words
               .filter(({ word }) => word.includes(search))
+              .toReversed()
               .map(({ word, id }) => (
                 <div
                   key={id}
@@ -104,6 +109,7 @@ const AddPair = ({
           <ScrollArea className="flex flex-col h-[50vh]">
             {words2
               .filter(({ word }) => word.includes(search))
+              .toReversed()
               .map(({ word, id }) => (
                 <div
                   key={id}
@@ -121,21 +127,35 @@ const AddPair = ({
               ))}
           </ScrollArea>
         )}
-
-        <DialogClose>
+        <div className="flex gap-1 w-full">
+          <Button
+            variant="outline"
+            disabled={current === 0}
+            onClick={() => setCurrent((current) => current - 1)}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
           <Button
             disabled={!(checked1 && checked2)}
-            className="md:w-fit"
+            className="w-full"
             onClick={() => {
               doneFunc(checked1!, checked2!);
               setChecked1(null);
               setChecked2(null);
               setCurrent(0);
+              setOpen(false);
             }}
           >
             Добавить
           </Button>
-        </DialogClose>
+          <Button
+            variant="outline"
+            disabled={current === 1}
+            onClick={() => setCurrent((current) => current + 1)}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

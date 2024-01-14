@@ -69,7 +69,7 @@ export default function Page() {
           >
             <Plus className="transition-all duration-300 w-4 h-4 mr-2 rotate-0 group-hover:rotate-90" /> Добавить слово
           </Button>
-          {words.map((word) => (
+          {words.toReversed().map((word) => (
             <div key={word.id} className="flex gap-1 flex-row items-center">
               <AudioPlayback audio={word.audio} />
               <div className="ml-1">{word.word}</div>

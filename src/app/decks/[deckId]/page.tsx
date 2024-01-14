@@ -120,6 +120,7 @@ export default function Page() {
     React.useState<boolean>(false);
   const [swap, setSwap] = React.useState<boolean>(false);
   const [shuffle, setShuffle] = React.useState<boolean>(false);
+  const [pairDialogOpen, setPairDialogOpen] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (selected1 && selected2) {
@@ -241,7 +242,7 @@ export default function Page() {
       changedPairs = [...pairs];
     }
     let i = 0;
-    for (const w of pairs) {
+    for (const w of changedPairs) {
       const { selected1: word1, selected2: word2, checked } = w;
       i++;
       if (checked === true) {
@@ -329,7 +330,8 @@ export default function Page() {
   }
   return (
     <div className="p-2">
-      <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
+    <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
+      <p className="text-center">{deck?.fromLanguage?.title} — {deck?.toLanguage?.title}</p>
       {/* <DropdownMenu>
         <div className="flex items-center justify-center">
           <DropdownMenuTrigger asChild>
@@ -358,7 +360,7 @@ export default function Page() {
         </DropdownMenuContent>
       </DropdownMenu> */}
 
-      <div className="grid grid-cols-2 min-h-full">
+      {/* <div className="grid grid-cols-2 min-h-full">
         <div className="flex flex-col gap-1 items-center">
           <p>{deck?.fromLanguage?.title}</p>
           {words1.map((word) => {
@@ -403,7 +405,7 @@ export default function Page() {
             );
           })}
         </div>
-      </div>
+      </div> */}
       <div className="flex flex-col gap-1 items-center mt-3">
         <AddPair
           words={words1}
@@ -418,6 +420,8 @@ export default function Page() {
               },
             ]);
           }}
+          open={pairDialogOpen}
+          setOpen={setPairDialogOpen}
         />
         {pairs.map(
           ({
@@ -430,7 +434,7 @@ export default function Page() {
             checked: boolean;
           }) => (
             <div
-              key={`${selected1.id}-${selected2.id}`}
+              key={`${selected1?.id}-${selected2?.id}`}
               className="border border-zinc-200 rounded-md p-2 flex gap-1 items-center"
             >
               <TooltipProvider>
@@ -462,9 +466,9 @@ export default function Page() {
                 </Tooltip>
               </TooltipProvider>
               {/* <AudioPlayback audio={selected1.audio!} /> */}
-              <span>{selected1.word}</span> —
+              <span>{selected1?.word}</span> —
               {/* <AudioPlayback audio={selected2.audio!} /> */}
-              <span>{selected2.word}</span>
+              <span>{selected2?.word}</span>
               <Button
                 variant="outline"
                 size="icon"
