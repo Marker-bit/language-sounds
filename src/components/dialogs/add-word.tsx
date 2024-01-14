@@ -62,6 +62,12 @@ export const AddWordModal = () => {
     },
   });
 
+  useEffect(() => {
+    if (window.localStorage.getItem("microphonePermission") === "true") {
+      getMicrophonePermission();
+    }
+  }, []);
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!audio) return;
     getDb((db) => {
@@ -91,6 +97,7 @@ export const AddWordModal = () => {
         }
         // streamData.getAudioTracks().forEach((track) => track.applyConstraints(constraint));
         setPermission(true);
+        window.localStorage.setItem("microphonePermission", "true");
         setStream(streamData);
       } catch (err: any) {
         alert(err.message);

@@ -9,18 +9,20 @@ import {
 } from "@/components/ui/context-menu";
 import { useModal } from "@/hooks/use-modal-store";
 import { getDb } from "@/lib/utils";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Page() {
   let [languages, setLanguages] = useState([]);
   let [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { onOpen } = useModal();
 
   useEffect(() => {
     setMounted(true);
     update();
+    setLoading(false);
     setInterval(update, 1000);
   }, []);
 
@@ -40,6 +42,7 @@ export default function Page() {
 
   return (
     <div>
+      {loading && <Loader2 className="w-5 h-5 animate-spin" />}
       <div className="flex gap-2 flex-wrap">
         {languages.map((language: { id: number; title: string }) => (
           <ContextMenu key={language.id}>
@@ -66,14 +69,16 @@ export default function Page() {
             </ContextMenuContent>
           </ContextMenu>
         ))}
+        {!loading && (
+          <Button
+            className="border border-zinc-200 rounded-md w-20"
+            variant="outline"
+            onClick={() => onOpen("addLanguage", null, null, null)}
+          >
+            <Plus className="w-5 h-5" />
+          </Button>
+        )}
       </div>
-      <Button
-        className="border border-zinc-200 rounded-md p-1 my-2"
-        variant="outline"
-        onClick={() => onOpen("addLanguage", null, null, null)}
-      >
-        <Plus className="w-5 h-5" />
-      </Button>
     </div>
   );
 }

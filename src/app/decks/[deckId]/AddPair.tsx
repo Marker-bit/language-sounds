@@ -137,7 +137,7 @@ const AddPair = ({
           </Button>
           <Button
             disabled={!(checked1 && checked2)}
-            className="w-full"
+            className="flex-grow"
             onClick={() => {
               doneFunc(checked1!, checked2!);
               setChecked1(null);
