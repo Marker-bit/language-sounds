@@ -3,7 +3,7 @@
 import AudioPlayback from "@/components/audio-playback";
 import { Button } from "@/components/ui/button";
 import { useModal } from "@/hooks/use-modal-store";
-import { getDb } from "@/lib/utils";
+import { cn, getDb } from "@/lib/utils";
 import {
   CopyPlus,
   Edit,
@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Search,
   Trash2,
 } from "lucide-react";
 import { useParams } from "next/navigation";
@@ -25,11 +26,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import type { Language } from "@/types";
+import { Input } from "@/components/ui/input";
 
 export default function Page() {
   const { languageId } = useParams();
   const [language, setLanguage] = useState<Language | null>(null);
   const [words, setWords] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const { onOpen } = useModal();
 
   useEffect(() => {
@@ -67,10 +70,18 @@ export default function Page() {
             onClick={() => onOpen("addWord", language, null, null, words)}
             className="my-2 group"
           >
-            <Plus className="transition-all duration-300 w-4 h-4 mr-2 rotate-0 group-hover:rotate-90" /> Добавить слово
+            <Plus className="transition-all duration-300 w-4 h-4 mr-2 rotate-0 group-hover:rotate-90" />{" "}
+            Добавить слово
           </Button>
+          <div className="rounded-md border border-black/10 hover:border-black/20 flex items-center sm:w-[30%] m-2 md:m-1 group">
+            <Search className="w-4 h-4 m-2 text-black/40 group-hover:text-black/60" />
+            <input className="h-full w-full outline-none bg-none" value={search} onChange={(evt) => setSearch(evt.target.value)} />
+          </div>
           {words.toReversed().map((word) => (
-            <div key={word.id} className="flex gap-1 flex-row items-center">
+            <div key={word.id} className={cn(
+              "flex gap-1 flex-row items-center transition-all",
+              !word.word.includes(search) && "hidden"
+            )}>
               <AudioPlayback audio={word.audio} />
               <div className="ml-1">{word.word}</div>
               <DropdownMenu>
