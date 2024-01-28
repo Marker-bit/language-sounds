@@ -36,12 +36,12 @@ import {
 } from "lucide-react";
 import AudioPlayback from "../audio-playback";
 
-const formSchema = z.object({
-  word: z.string().min(1, "Введите слово"),
-});
-
 export const AddWordModal = () => {
-  const { isOpen, onClose, type, language } = useModal();
+  const { isOpen, onClose, type, language, words } = useModal();
+
+  const formSchema = z.object({
+    word: z.string().min(1, "Введите слово").refine(word => !words?.find(w => w.word === word), {message: "Такое слово уже добавлено в язык"}),
+  });
   const isModalOpen = isOpen && type === "addWord";
 
   const [recordingStatus, setRecordingStatus] = useState("inactive");

@@ -131,16 +131,26 @@ const AddPair = ({
               .map(({ word, id }) => (
                 <div
                   key={id}
-                  className="border border-zinc-200 hover:border-zinc-300 cursor-pointer p-2 rounded-md flex items-center mb-2 group"
-                  onClick={() => setChecked2(id)}
+                  className={cn(
+                    "border border-zinc-200 cursor-pointer p-2 rounded-md flex mb-2 group items-center",
+                    !pairs.find((p) => p.selected2.word === word) && "hover:border-zinc-300"
+                  )}
+                  onClick={() => !pairs.find((p) => p.selected2.word === word) && setChecked2(id)}
                 >
                   <Check
                     className={cn(
-                      "w-4 h-4 mr-2 text-zinc-300 group-hover:text-zinc-700 transition-all",
-                      checked2 === id && "text-zinc-700"
+                      "w-4 h-4 mr-2 text-zinc-300 transition-all",
+                      checked2 === id && "text-zinc-700",
+                      !pairs.find((p) => p.selected2.word === word) &&
+                        "group-hover:text-zinc-700"
                     )}
                   />
-                  {word}
+                  <div className="flex flex-col">
+                    {word}
+                    {pairs.find((p) => p.selected2.word === word) && (
+                      <div className="text-black/50 text-xs">Уже добавлено</div>
+                    )}
+                  </div>
                 </div>
               ))}
           </ScrollArea>

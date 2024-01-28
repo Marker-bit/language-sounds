@@ -64,7 +64,7 @@ export default function Page() {
           <h1 className="text-3xl font-bold">{language?.title}</h1>
           <Button
             variant="outline"
-            onClick={() => onOpen("addWord", language, null, null)}
+            onClick={() => onOpen("addWord", language, null, null, words)}
             className="my-2 group"
           >
             <Plus className="transition-all duration-300 w-4 h-4 mr-2 rotate-0 group-hover:rotate-90" /> Добавить слово
