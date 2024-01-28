@@ -2,6 +2,8 @@
 
 import { useParams } from "next/navigation";
 
+// import worker_script from "./worker.worker";
+
 import AudioPlayback from "@/components/audio-playback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +16,10 @@ import {
 import { cn, getDb, shuffleArray } from "@/lib/utils";
 import {
   ArrowDownAZ,
+  ArrowDownNarrowWide,
   ArrowDownZA,
+  ArrowUpDown,
+  ArrowUpNarrowWide,
   AudioLines,
   CalendarDays,
   CalendarRange,
@@ -34,6 +39,7 @@ import {
 import * as React from "react";
 import {
   addSilenceToAudioDataUri,
+  audioBufferToWavBlob,
   concatenateAudioDataUris,
 } from "@/lib/audio-silencer";
 
@@ -101,12 +107,10 @@ export default function Page() {
   const [words2, setWords2] = React.useState<any[]>([]);
   const [saveSettingsDone, setSaveSettingsDone] =
     React.useState<boolean>(false);
-  const [selected1, setSelected1] = React.useState<any | null>(null);
-  const [selected2, setSelected2] = React.useState<any | null>(null);
   const [pairs, setPairs] = React.useState<any[]>([]);
   const [resultAudioUrl, setResultAudioUrl] = React.useState<string>("");
   const [loading, setLoading] = React.useState<boolean>(false);
-  const [currentSort, setCurrentSort] = React.useState<string>("oldest");
+  const [pairsReversed, setPairsReversed] = React.useState<boolean>(true);
 
   const [saveDone, setSaveDone] = React.useState<boolean>(false);
 
@@ -122,59 +126,9 @@ export default function Page() {
   const [shuffle, setShuffle] = React.useState<boolean>(false);
   const [pairDialogOpen, setPairDialogOpen] = React.useState<boolean>(false);
 
-  React.useEffect(() => {
-    if (selected1 && selected2) {
-      setPairs((prevPairs) => [...prevPairs, { selected1, selected2 }]);
-      setSelected1(null);
-      setSelected2(null);
-    }
-  }, [selected1, selected2]);
-
-  function select1(value: number | null) {
-    if (selected1 === value) {
-      setSelected1(null);
-      return;
-    }
-    setSelected1(value);
-  }
-
-  function select2(value: number | null) {
-    if (selected2 === value) {
-      setSelected2(null);
-      return;
-    }
-    setSelected2(value);
-  }
-
   function reset() {
     setPairs([]);
-    setSelected1(null);
-    setSelected2(null);
   }
-
-  React.useEffect(() => {
-    if (currentSort === "newest") {
-      setWords1((prevWords) => prevWords.sort((a, b) => a.id - b.id));
-      setWords2((prevWords) => prevWords.sort((a, b) => a.id - b.id));
-    } else if (currentSort === "oldest") {
-      setWords1((prevWords) => prevWords.sort((a, b) => b.id - a.id));
-      setWords2((prevWords) => prevWords.sort((a, b) => b.id - a.id));
-    } else if (currentSort === "a-z") {
-      setWords1((prevWords) =>
-        prevWords.sort((a, b) => b.word.localeCompare(a.word))
-      );
-      setWords2((prevWords) =>
-        prevWords.sort((a, b) => b.word.localeCompare(a.word))
-      );
-    } else if (currentSort === "z-a") {
-      setWords1((prevWords) =>
-        prevWords.sort((a, b) => a.word.localeCompare(b.word))
-      );
-      setWords2((prevWords) =>
-        prevWords.sort((a, b) => a.word.localeCompare(b.word))
-      );
-    }
-  }, [currentSort]);
 
   function savePairs() {
     setSaveDone(false);
@@ -223,15 +177,65 @@ export default function Page() {
 
   React.useEffect(() => {
     audioCtx.current = new window.AudioContext();
+    console.log("useEffect");
   }, []);
 
   React.useEffect(() => {
     importSettings();
     refreshDeck();
+    console.log("useEffect");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // React.useEffect(() => {
+  //   setWorker(new Worker(new URL("./worker.worker.ts", import.meta.url)));
+  //   return () => {
+  //     if (worker) worker.terminate();
+  //   };
+  // }, []);
+
   async function makeRecording() {
+    setRecordingLoading(true);
+    // const myWorker = new Worker(worker_script);
+    // if (!worker) {
+    //   return;
+    // }
+    // const myWorker = worker;
+    // console.log(myWorker);
+    // let datauris = [];
+    // for (const {selected1, selected2} of pairs) {
+    //   datauris.push(selected1.audio);
+    //   datauris.push(selected2.audio);
+    // }
+    // myWorker.postMessage(
+    //   { mp3DataURI: datauris[0], silenceDuration: 5 },
+    // );
+    // myWorker.addEventListener("message", (m) => {
+    //   console.log("msg from worker: ", m.data);
+    //   console.log(m.data[0]);
+    //   setResultAudioUrl(m.data[0]);
+    // });
+    // myWorker.onmessage = async (m: MessageEvent) => {
+    //   console.log("msg from worker: ", m.data);
+    //   const data = m.data;
+    //   if (data.type === "decodeAudioData") {
+    //     const audioCtx = new AudioContext();
+
+    //     // Perform AudioContext operations here
+    //     const audioBlob = await audioCtx.decodeAudioData(data.value.audioBuffer);
+    //     // Send the processed data back to the worker
+    //     worker.postMessage({ type: "decodeAudioDataDone", audioBlob });
+    //   } else if (data.type === "recordedDone") {
+    //     setRecordedDone(data.value);
+    //   } else if (data.type === "audioUrl") {
+    //     setResultAudioUrl(data.value);
+    //     setRecordingLoading(false);
+    //   }
+    // };
+    // myWorker.onmessage = (m) => {
+    //   console.log("msg from worker: ", m.data);
+    // };
+    // myWorker.postMessage("im from main");
     setRecordingLoading(true);
     setRecordedDone(0);
     let fullyMerged = [];
@@ -330,8 +334,10 @@ export default function Page() {
   }
   return (
     <div className="p-2">
-    <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
-      <p className="text-center">{deck?.fromLanguage?.title} — {deck?.toLanguage?.title}</p>
+      <h1 className="text-3xl text-center">{deck?.title || "Без названия"}</h1>
+      <p className="text-center">
+        {deck?.fromLanguage?.title} — {deck?.toLanguage?.title}
+      </p>
       {/* <DropdownMenu>
         <div className="flex items-center justify-center">
           <DropdownMenuTrigger asChild>
@@ -407,23 +413,73 @@ export default function Page() {
         </div>
       </div> */}
       <div className="flex flex-col gap-1 items-center mt-3">
-        <AddPair
-          words={words1}
-          words2={words2}
-          doneFunc={(selected1: number, selected2: number) => {
-            setPairs((pairs) => [
-              ...pairs,
-              {
-                selected1: words1.find((w) => w.id === selected1),
-                selected2: words2.find((w) => w.id === selected2),
-                checked: false,
-              },
-            ]);
-          }}
-          open={pairDialogOpen}
-          setOpen={setPairDialogOpen}
-        />
-        {pairs.map(
+        <div className="flex gap-1 items-stretch">
+          <AddPair
+            words={words1}
+            words2={words2}
+            doneFunc={(selected1: number, selected2: number) => {
+              setPairs((pairs) => [
+                ...pairs,
+                {
+                  selected1: words1.find((w) => w.id === selected1),
+                  selected2: words2.find((w) => w.id === selected2),
+                  checked: false,
+                },
+              ]);
+              savePairs();
+            }}
+            pairs={pairs}
+            open={pairDialogOpen}
+            setOpen={setPairDialogOpen}
+          />
+          <Button
+            className="w-fit p-2"
+            variant="outline"
+            onClick={() => setPairsReversed((a) => !a)}
+          >
+            <ArrowUpNarrowWide
+              className={cn(
+                "w-4 h-4 transition-transform",
+                !pairsReversed && "rotate-180"
+              )}
+            />
+            <div className="relative ml-1 flex">
+              <div className="opacity-0">Сверху старые</div>
+              <div
+                className={cn(
+                  "absolute transition-all",
+                  !pairsReversed && "-translate-y-3 opacity-0"
+                )}
+              >
+                Сверху новые
+              </div>
+              <div
+                className={cn(
+                  "absolute transition-all",
+                  pairsReversed && "translate-y-3 opacity-0"
+                )}
+              >
+                Сверху старые
+              </div>
+            </div>
+          </Button>
+          <Button onClick={savePairs} variant="outline" className="relative">
+            <Check
+              className={cn(
+                "w-5 h-5 absolute transition-all",
+                !saveDone && "scale-0"
+              )}
+            />
+            <Save
+              className={cn(
+                "w-5 h-5 absolute transition-all",
+                saveDone && "scale-0"
+              )}
+            />
+          </Button>
+        </div>
+
+        {(pairsReversed ? pairs.toReversed() : pairs).map(
           ({
             selected1,
             selected2,

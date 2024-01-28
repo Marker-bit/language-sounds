@@ -21,4 +21,23 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = {
+  ...nextConfig,
+  // module.exports = {
+  //   module: {
+  //     rules: [
+  //       {
+  //         test: /\.worker\.js$/,
+  //         use: { loader: "worker-loader" },
+  //       },
+  //     ],
+  //   },
+  // };
+  // webpack: (config) => {
+  //   config.module.rules.push({
+  //     test: /\.worker\.ts$/,
+  //     use: { loader: "worker-loader" },
+  //   });
+  //   return config;
+  // }
+};
