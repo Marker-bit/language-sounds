@@ -17,11 +17,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <html lang="en">
       <head>
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#00e600" />
       </head>
       <body className={inter.className}>
         {/* <div className="flex flex-col min-h-screen justify-center items-center"> */}
