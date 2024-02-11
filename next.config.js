@@ -2,7 +2,11 @@ const withPWA = require('next-pwa')({
   dest: 'public'
 })
 
-module.exports = withPWA({});
+module.exports = withPWA({
+  images: {
+    domains: ["avatars.yandex.net"]
+  }
+});
 
 // const withPWA = require("next-pwa");
 

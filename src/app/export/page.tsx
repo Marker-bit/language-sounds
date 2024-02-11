@@ -33,7 +33,6 @@ import {
   Download,
   FileDown,
   Files,
-  Link,
   List,
   Loader2,
   RotateCw,
@@ -43,6 +42,7 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Page() {
   const [done, setDone] = useState(false);
@@ -476,6 +476,7 @@ export default function Page() {
               ) : (
                 currentTab === "yadisk" && (
                   <div className="flex items-center justify-center flex-col gap-1 min-h-52">
+                    <Link href="/yadisk">Привязать аккаунт</Link>
                     <p>Аккаунт: {accountData?.login}</p>
                     <Input
                       placeholder="Название файла"

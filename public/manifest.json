@@ -1,8 +1,8 @@
 {
   "name": "Language Sounds",
   "short_name": "Language Sounds",
-  "theme_color": "#00e600",
-  "background_color": "#black",
+  "theme_color": "#000",
+  "background_color": "#000",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",

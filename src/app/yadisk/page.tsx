@@ -2,6 +2,7 @@
 
 import YandexLogin2 from "@/components/oauth/YandexLogin2";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -13,8 +14,10 @@ const Page = () => {
     expires_in?: string | null;
   }>({});
   const [accountData, setAccountData] = useState<{
-    login?: string | null;
-    default_email?: string | null;
+    login?: string;
+    default_email?: string;
+    real_name?: string;
+    default_avatar_id?: string;
   }>({});
   useEffect(() => {
     setHost(window.location.host);
@@ -45,8 +48,8 @@ const Page = () => {
     const expireDate = new Date();
     expireDate.setSeconds(
       expireDate.getSeconds() + parseInt(data["expires_in"])
-    )
-    const expireString = expireDate.toISOString()
+    );
+    const expireString = expireDate.toISOString();
     window.localStorage.setItem("yandexToken", data["access_token"]);
     window.localStorage.setItem("yandexTokenExpires", expireString);
     setAuthData({
@@ -78,23 +81,34 @@ const Page = () => {
   return (
     <>
       {authData.access_token ? (
-        <div>
-          <h1 className="text-2xl font-bold">Данные об аккаунте Яндекс</h1>
-          <p>
-            <span className="text-zinc-400">Имя пользователя</span>:{" "}
-            {accountData.login}
-          </p>
-          <p>
-            <span className="text-zinc-400">Почта</span>:{" "}
-            {accountData.default_email}
-          </p>
-          <Button onClick={logOut}>Выйти из аккаунта</Button>
+        <div className="bg-gradient-to-br from-red-500/20 to-orange-400/30 rounded-md p-2 w-fit mx-auto hover:rotate-3 transition-transform cursor-default flex gap-2">
+          <Image
+            src={`https://avatars.yandex.net/get-yapic/${accountData.default_avatar_id}/islands-200`}
+            alt="avatar"
+            width={200}
+            height={200}
+            className="w-20 h-20 rounded-xl"
+          />
+          <div>
+            <h1 className="text-2xl font-bold">Данные об аккаунте Яндекс</h1>
+            <p>
+              <span className="text-black/50">Имя пользователя</span>:{" "}
+              {accountData.login}
+            </p>
+            <p>
+              <span className="text-black/50">Почта</span>:{" "}
+              {accountData.default_email}
+            </p>
+            <p>
+              <span className="text-black/50">Имя</span>:{" "}
+              {accountData.real_name}
+            </p>
+
+            <Button onClick={logOut}>Выйти из аккаунта</Button>
+          </div>
         </div>
       ) : (
-        <YandexLogin2
-          clientID={clientId}
-          redirectUrl={`http://${host}/yadisk`}
-        >
+        <YandexLogin2 clientID={clientId} redirectUrl={`http://${host}/yadisk`}>
           <Button>Войти</Button>
         </YandexLogin2>
       )}
