@@ -33,6 +33,7 @@
     "cmdk": "^0.2.0",
     "compress-json": "^3.0.0",
     "compress-str": "^1.0.2",
+    "crunker": "^2.4.0",
     "howler": "^2.2.4",
     "lucide-react": "^0.304.0",
     "lz-string": "^1.5.0",

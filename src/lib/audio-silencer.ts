@@ -1,3 +1,5 @@
+import Crunker from "crunker";
+
 export function getWavBytes(buffer: any, options: any) {
   const type = options.isFloat ? Float32Array : Uint16Array;
   const numFrames = buffer.byteLength / type.BYTES_PER_ELEMENT;
@@ -194,7 +196,7 @@ function base64ToBuffer(base64: string): Buffer {
 
 // Function to convert base64 string to ArrayBuffer
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  const binaryString = Buffer.from(base64, 'base64');
+  const binaryString = Buffer.from(base64, "base64");
   const buffer = binaryString.buffer.slice(
     binaryString.byteOffset,
     binaryString.byteOffset + binaryString.byteLength
@@ -202,6 +204,56 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return buffer;
 }
 
+export async function createSilentAudioBuffer(
+  context: AudioContext,
+  silenceDuration: number,
+  sampleRate = 48000
+) {
+  return context.createBuffer(
+    2, // number of channels
+    sampleRate * silenceDuration,
+    sampleRate
+  );
+}
+
+export async function concatAudioBuffers(
+  buffers: AudioBuffer[]
+) {
+  const crunker = new Crunker({ sampleRate: buffers[0].sampleRate });
+  const merged = await crunker["concatAudio"](buffers);
+  // const output = await crunker.export(merged, "audio/mp3");
+  return merged;
+}
+
+export function audioBufferFromBlob(blob: Blob) {
+  return new Promise<AudioBuffer>((resolve) => {
+    const audioContext = new AudioContext();
+    const fileReader = new FileReader();
+
+    // Set up file reader on loaded end event
+    fileReader.onloadend = () => {
+      const arrayBuffer = fileReader.result as ArrayBuffer;
+
+      audioContext.decodeAudioData(arrayBuffer, (audioBuffer) => {
+        resolve(audioBuffer);
+      });
+    };
+
+    //Load blob
+    fileReader.readAsArrayBuffer(blob);
+  });
+}
+
+export async function concatDataUris(uri1: string, uri2: string) {
+  const crunker = new Crunker();
+  const blob1 = dataURItoBlob(uri1);
+  const blob2 = dataURItoBlob(uri2);
+  const audioBuffer1 = await audioBufferFromBlob(blob1);
+  const audioBuffer2 = await audioBufferFromBlob(blob2);
+  const merged = await crunker.concatAudio([audioBuffer1, audioBuffer2]);
+  const output = await crunker.export(merged, "audio/mp3");
+  return output.blob;
+}
 
 // Function to add silence to an AudioBuffer
 export async function addSilenceToAudioDataUri(
@@ -255,12 +307,15 @@ export async function addSilenceToAudioDataUri(
   return wavDataUri;
 }
 
-export async function concatenateAudioDataUris(dataUri1: string, dataUri2: string): Promise<string> {
+export async function concatenateAudioDataUris(
+  dataUri1: string,
+  dataUri2: string
+): Promise<string> {
   const context = new AudioContext();
 
   // Extract the base64 parts of the data URIs
-  const base64String1 = dataUri1.split(',')[1];
-  const base64String2 = dataUri2.split(',')[1];
+  const base64String1 = dataUri1.split(",")[1];
+  const base64String2 = dataUri2.split(",")[1];
 
   // Convert base64 strings to Buffers
   const audioBuffer1 = base64ToArrayBuffer(base64String1);
@@ -284,19 +339,25 @@ export async function concatenateAudioDataUris(dataUri1: string, dataUri2: strin
 
   // Copy the first audio data
   for (let channel = 0; channel < originalBuffer1.numberOfChannels; channel++) {
-    combinedBuffer.getChannelData(channel).set(originalBuffer1.getChannelData(channel));
+    combinedBuffer
+      .getChannelData(channel)
+      .set(originalBuffer1.getChannelData(channel));
   }
 
   // Copy the second audio data, starting at the end of the first
   for (let channel = 0; channel < originalBuffer2.numberOfChannels; channel++) {
-    combinedBuffer.getChannelData(channel).set(originalBuffer2.getChannelData(channel), originalBuffer1.length);
+    combinedBuffer
+      .getChannelData(channel)
+      .set(originalBuffer2.getChannelData(channel), originalBuffer1.length);
   }
 
   // Encode the combined buffer to WAV
   const wav = toWav(combinedBuffer);
 
   // Convert the WAV buffer to a data URI
-  const wavDataUri = `data:audio/wav;base64,${Buffer.from(wav).toString('base64')}`;
+  const wavDataUri = `data:audio/wav;base64,${Buffer.from(wav).toString(
+    "base64"
+  )}`;
 
   return wavDataUri;
 }

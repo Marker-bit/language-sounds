@@ -39,8 +39,12 @@ import {
 import * as React from "react";
 import {
   addSilenceToAudioDataUri,
+  audioBufferFromBlob,
   audioBufferToWavBlob,
+  concatAudioBuffers,
   concatenateAudioDataUris,
+  createSilentAudioBuffer,
+  dataURItoBlob,
 } from "@/lib/audio-silencer";
 
 import type { Deck, Word } from "@/types";
@@ -177,13 +181,11 @@ export default function Page() {
 
   React.useEffect(() => {
     audioCtx.current = new window.AudioContext();
-    console.log("useEffect");
   }, []);
 
   React.useEffect(() => {
     importSettings();
     refreshDeck();
-    console.log("useEffect");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -253,30 +255,46 @@ export default function Page() {
         setRecordedDone((i / pairs.length) * 50);
         continue;
       }
-      const newDataUri = await addSilenceToAudioDataUri(
-        swap ? word2.audio : word1.audio,
-        wordTranslationDelay
-      );
-      const newDataUri2 = await addSilenceToAudioDataUri(
-        swap ? word1.audio : word2.audio,
-        pairsDelay
-      );
-      fullyMerged.push(newDataUri, newDataUri2);
+      const blob1 = dataURItoBlob(swap ? word2.audio : word1.audio);
+      const blob2 = dataURItoBlob(swap ? word1.audio : word2.audio);
+      const audioBuffer1 = await audioBufferFromBlob(blob1);
+      const audioBuffer2 = await audioBufferFromBlob(blob2);
+      const wordTranslationSilent = await createSilentAudioBuffer(audioCtx.current, wordTranslationDelay);
+      const pairsSilent = await createSilentAudioBuffer(audioCtx.current, pairsDelay);
+
+      const merged = await concatAudioBuffers(
+        [audioBuffer1, wordTranslationSilent, audioBuffer2, pairsSilent]
+      )
+      // const newDataUri = await addSilenceToAudioDataUri(
+      //   swap ? word2.audio : word1.audio,
+      //   wordTranslationDelay
+      // );
+      // const newDataUri2 = await addSilenceToAudioDataUri(
+      //   swap ? word1.audio : word2.audio,
+      //   pairsDelay
+      // );
+      // fullyMerged.push(newDataUri, newDataUri2);
+      fullyMerged.push(merged);
       setRecordedDone((i / pairs.length) * 50);
     }
     setRecordedDone(0);
-    let resultUri = "";
-    i = 0;
-    for (const uri of fullyMerged) {
-      if (!resultUri) {
-        resultUri = uri;
-      } else {
-        resultUri = await concatenateAudioDataUris(resultUri, uri);
-      }
-      i++;
-      setRecordedDone(50 + (i / fullyMerged.length) * 50);
-    }
-    setResultAudioUrl(resultUri);
+    // let resultUri = "";
+    // i = 0;
+    // for (const uri of fullyMerged) {
+    //   if (!resultUri) {
+    //     resultUri = uri;
+    //   } else {
+    //     resultUri = await concatenateAudioDataUris(resultUri, uri);
+    //   }
+    //   i++;
+    //   setRecordedDone(50 + (i / fullyMerged.length) * 50);
+    // }
+
+    // setResultAudioUrl(resultUri);
+
+    const fullyMergedAudioBuffer = await concatAudioBuffers(fullyMerged);
+    const resultBlob = await audioBufferToWavBlob(fullyMergedAudioBuffer);
+    setResultAudioUrl(URL.createObjectURL(resultBlob));
     setRecordingLoading(false);
   }
 
@@ -676,7 +694,7 @@ export default function Page() {
                 <>
                   {/* <AudioPlayback audio={resultAudioUrl} /> */}
                   <AudioController src={resultAudioUrl} />
-                  <a href={resultAudioUrl} download>
+                  <a href={resultAudioUrl} download={deck?.title + ".wav"}>
                     <Button variant="outline" size="icon">
                       <Download className="w-4 h-4" />
                     </Button>
