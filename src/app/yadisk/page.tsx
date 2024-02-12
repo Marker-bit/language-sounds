@@ -108,7 +108,7 @@ const Page = () => {
           </div>
         </div>
       ) : (
-        <YandexLogin2 clientID={clientId} redirectUrl={`http://${host}/yadisk`}>
+        <YandexLogin2 clientID={clientId} redirectUrl={host === "localhost:3000" ? `http://${host}/yadisk` : `https://${host}/yadisk`}>
           <Button>Войти</Button>
         </YandexLogin2>
       )}
