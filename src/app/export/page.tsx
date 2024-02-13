@@ -99,7 +99,7 @@ export default function Page() {
         const words = event.target.result;
         const tx = db.transaction("languages", "readonly");
         const store = tx.objectStore("languages");
-        
+
         store.getAll().onsuccess = (event: any) => {
           const languages = event.target.result;
           const tx = db.transaction("pairs", "readonly");
@@ -414,15 +414,25 @@ export default function Page() {
                 <div className="flex items-center justify-center flex-col gap-1 min-h-52">
                   <Button
                     onClick={() => downloadFile(exportBlobUrl!, "export.json")}
+                    disabled={exportBlobUrl === null}
                   >
-                    <Download className="inline mr-1 w-4 h-4" /> Одноразовая
-                    ссылка
+                    {exportBlobUrl === null ? (
+                      <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="inline mr-1 w-4 h-4" />
+                    )}
+                    Одноразовая ссылка
                   </Button>
                   <Button
                     onClick={() => downloadFile(exportUrl!, "export.json")}
+                    disabled={exportBlobUrl === null}
                   >
-                    <ArrowDownToLine className="inline mr-1 w-4 h-4" /> Длинная
-                    ссылка
+                    {exportBlobUrl === null ? (
+                      <Loader2 className="inline mr-1 w-4 h-4 animate-spin" />
+                    ) : (
+                      <ArrowDownToLine className="inline mr-1 w-4 h-4" />
+                    )}
+                    Длинная ссылка
                   </Button>
                 </div>
               ) : currentTab === "copy" ? (
