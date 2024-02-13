@@ -111,10 +111,10 @@ export default function Page() {
             pairs = pairs.map((deck: any) => {
               deck.pairs = deck.pairs.map((pair: any) => {
                 pair.selected1 = {
-                  id: pair.selected1.id,
+                  id: pair?.selected1?.id,
                 };
                 pair.selected2 = {
-                  id: pair.selected2.id,
+                  id: pair?.selected2?.id,
                 };
                 return pair;
               });
